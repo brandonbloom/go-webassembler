@@ -49,13 +49,3 @@ func (sec *CodeSection) Add(code *Code) FuncIdx {
 	sec.buf.WriteRaw(code.buf.Bytes())
 	return FuncIdx(i)
 }
-
-type FuncCode struct {
-	buf *Buffer
-	Code
-}
-
-func (f *FuncCode) EndFunc() {
-	f.buf.WriteU32(U32(f.Code.buf.Len()))
-	f.buf.WriteRaw(f.Code.buf.Bytes())
-}
