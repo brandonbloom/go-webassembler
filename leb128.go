@@ -26,6 +26,21 @@ func writeSignedLEB128[T signed](buf *bytes.Buffer, i T) {
 	}
 }
 
+func unsignedLEB128Size[T unsigned](i T) int {
+	size := 0
+	for {
+		b := byte(i & 0x7f)
+		i >>= 7
+		if i != 0 {
+			b |= 0x80
+		}
+		size++
+		if i == 0 {
+			return size
+		}
+	}
+}
+
 func writeUnsignedLEB128[T unsigned](buf *bytes.Buffer, i T) {
 	for {
 		b := byte(i & 0x7f)

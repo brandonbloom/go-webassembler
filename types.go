@@ -49,7 +49,7 @@ func (rt ResultType) emit(buf *Buffer) {
 }
 
 type TypeSection struct {
-	n   int
+	n   U32
 	buf Buffer
 }
 
@@ -57,8 +57,13 @@ func (sec *TypeSection) SectionID() SectionID {
 	return TypeSectionID
 }
 
-func (sec *TypeSection) Bytes() []byte {
-	return sec.buf.Bytes()
+func (sec *TypeSection) Size() int {
+	return unsignedLEB128Size(sec.n) + sec.buf.Len()
+}
+
+func (sec *TypeSection) emitContents(buf *Buffer) {
+	buf.WriteU32(sec.n)
+	buf.WriteRaw(sec.buf.Bytes())
 }
 
 func (sec *TypeSection) AddFunc(rt1, rt2 ResultType) TypeIdx {

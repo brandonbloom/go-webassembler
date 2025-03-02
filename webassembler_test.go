@@ -32,15 +32,18 @@ func TestWebassembler(t *testing.T) {
 	mod := NewModule()
 
 	typeIdx := mod.Types.AddFunc(nil, ResultType{TypeI32})
-	funcIdx := mod.Funcs.Add(typeIdx)
-	_ = mod.ExportFunc("_start", funcIdx)
 
-	code := mod.Code.BeginFunc(nil)
+	code := NewCode()
 	code.I32_Const(5)
 	code.I32_Const(10)
 	code.I32_Add()
 	code.End()
-	code.EndFunc()
+
+	funcIdx := mod.AddFunc(typeIdx, code)
+	_ = mod.ExportFunc("_start", funcIdx)
+
+	// Uncomment to dump out files for debugging.
+	//os.WriteFile("/tmp/dump.wasm", mod.Bytes(), 0600)
 
 	res := runInt(t, mod)
 	assert.Equal(t, 15, res)

@@ -56,3 +56,12 @@ func (mod *Module) emitSections(buf *Buffer) {
 func (mod *Module) ExportFunc(name string, idx FuncIdx) ExportIdx {
 	return mod.Exports.AddFunc(name, idx)
 }
+
+func (mod *Module) AddFunc(typeIdx TypeIdx, code *Code) FuncIdx {
+	funcIdx := mod.Funcs.Add(typeIdx)
+	codeIdx := mod.Code.Add(code)
+	if funcIdx != codeIdx {
+		panic("misaligned function signatures and code sections")
+	}
+	return funcIdx
+}

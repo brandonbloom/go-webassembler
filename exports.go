@@ -1,7 +1,7 @@
 package webassembler
 
 type ExportSection struct {
-	n   int
+	n   U32
 	buf Buffer
 }
 
@@ -9,8 +9,13 @@ func (sec *ExportSection) SectionID() SectionID {
 	return ExportSectionID
 }
 
-func (sec *ExportSection) Bytes() []byte {
-	return sec.buf.Bytes()
+func (sec *ExportSection) Size() int {
+	return unsignedLEB128Size(sec.n) + sec.buf.Len()
+}
+
+func (sec *ExportSection) emitContents(buf *Buffer) {
+	buf.WriteU32(sec.n)
+	buf.WriteRaw(sec.buf.Bytes())
 }
 
 func (sec *ExportSection) add(name string, kind byte, idx U32) ExportIdx {

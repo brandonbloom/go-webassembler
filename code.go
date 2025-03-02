@@ -1,23 +1,14 @@
-// Package webassembler provides tools for generating WebAssembly binary code.
 package webassembler
 
 type Code struct {
 	buf Buffer
 }
 
-func NewCode() *Code {
-	return &Code{}
+func NewCode(locals ...LocalType) *Code {
+	c := &Code{}
+	writeVec(&c.buf, locals)
+	return c
 }
-
-// The public interface of the Code object is made up of generated instruction methods.
-//go:generate sh -c "go run internal/cmd/codegen/main.go <internal/instructions/index.csv >instructions.go"
-
-type CodeSection struct {
-	buf   Buffer
-	funcs []*Code
-}
-
-type LocalTypes []LocalType
 
 type LocalType struct {
 	N    U32
@@ -29,20 +20,34 @@ func (lt LocalType) emit(buf *Buffer) {
 	lt.Type.emit(buf)
 }
 
+// The public interface of the Code object is made up of generated instruction methods.
+//go:generate sh -c "go run internal/cmd/codegen/main.go <internal/instructions/index.csv >instructions.go"
+
+type CodeSection struct {
+	n     U32
+	buf   Buffer
+	funcs []*Code
+}
+
 func (sec *CodeSection) SectionID() SectionID {
 	return CodeSectionID
 }
 
-func (sec *CodeSection) Bytes() []byte {
-	return sec.buf.Bytes()
+func (sec *CodeSection) Size() int {
+	return unsignedLEB128Size(sec.n) + sec.buf.Len()
 }
 
-// When finished, must call .EndFunc() on result.
-func (sec *CodeSection) BeginFunc(locals LocalTypes) *FuncCode {
-	writeVec(&sec.buf, locals)
-	return &FuncCode{
-		buf: &sec.buf,
-	}
+func (sec *CodeSection) emitContents(buf *Buffer) {
+	buf.WriteU32(sec.n)
+	buf.WriteRaw(sec.buf.Bytes())
+}
+
+func (sec *CodeSection) Add(code *Code) FuncIdx {
+	i := sec.n
+	sec.n++
+	sec.buf.WriteU32(U32(code.buf.Len()))
+	sec.buf.WriteRaw(code.buf.Bytes())
+	return FuncIdx(i)
 }
 
 type FuncCode struct {

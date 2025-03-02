@@ -20,16 +20,16 @@ const (
 
 type Section interface {
 	SectionID() SectionID
-	Bytes() []byte
+	Size() int
+	emitContents(buf *Buffer)
 }
 
 func writeSection(buf *Buffer, s Section) {
-	bs := s.Bytes()
-	size := len(bs)
+	size := s.Size()
 	if size == 0 {
 		return
 	}
 	buf.WriteI32(I32(s.SectionID()))
 	buf.WriteU32(U32(size))
-	buf.WriteRaw(bs)
+	s.emitContents(buf)
 }
