@@ -34,7 +34,7 @@ def clean_stack_notation(stack_notation):
         
     return "", ""
 
-def clean_instruction_name(name):
+def clean_latex(name):
     if name is None:
         return ""
     # Remove LaTeX commands and format nicely
@@ -59,7 +59,7 @@ def extract_immediates(name):
         return ""
     return parts[1]
 
-def get_base_instruction(name):
+def extract_name(name):
     """Get the base instruction name without immediates."""
     if ' ' not in name:
         return name
@@ -73,19 +73,27 @@ def generate_csv():
         writer.writerow(['instruction', 'immediates', 'opcode', 'input', 'output'])
         
         for instr in INSTRUCTIONS:
-            name, opcode, type_str, _, _ = instr
+            name_and_immediates, opcode, type_str, _, _ = instr
             
             # Skip rows with None (reserved) opcodes
-            if name is None:
+            if name_and_immediates is None:
                 continue
                 
-            clean_name = clean_instruction_name(name)
-            base_instruction = get_base_instruction(clean_name)
-            immediates = extract_immediates(clean_name)
+            name_and_immediates = clean_latex(name_and_immediates)
+            name = extract_name(name_and_immediates)
+            immediates = extract_immediates(name_and_immediates)
             clean_code = clean_opcode(opcode)
             input_stack, output_stack = clean_stack_notation(type_str)
             
-            writer.writerow([base_instruction, immediates, clean_code, input_stack, output_stack])
+            # Fixups.
+            if name == "select" and immediates == "t":
+                name = "select_typed"
+            elif "local" in name and immediates == "x":
+                immediates = "local"
+            elif "global" in name and immediates == "x":
+                immediates = "global"
+            
+            writer.writerow([name, immediates, clean_code, input_stack, output_stack])
 
 
 INSTRUCTIONS = [

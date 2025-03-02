@@ -1,0 +1,47 @@
+package webassembler
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/tetratelabs/wazero"
+)
+
+func runInt(t *testing.T, mod *Module) int {
+	ctx := t.Context()
+	rt := wazero.NewRuntime(ctx)
+	defer rt.Close(ctx)
+
+	inst, err := rt.Instantiate(ctx, mod.Bytes())
+	if err != nil {
+		t.Fatalf("instantiating module: %v", err)
+	}
+	defer inst.Close(ctx)
+
+	results, err := inst.ExportedFunction("_start").Call(ctx)
+	if err != nil {
+		t.Fatalf("calling _start: %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result, got %d", len(results))
+	}
+	return int(results[0])
+}
+
+func TestWebassembler(t *testing.T) {
+	mod := NewModule()
+
+	typeIdx := mod.Types.AddFunc(nil, ResultType{TypeI32})
+	funcIdx := mod.Funcs.Add(typeIdx)
+	_ = mod.ExportFunc("_start", funcIdx)
+
+	code := mod.Code.BeginFunc(nil)
+	code.I32_Const(5)
+	code.I32_Const(10)
+	code.I32_Add()
+	code.End()
+	code.EndFunc()
+
+	res := runInt(t, mod)
+	assert.Equal(t, 15, res)
+}

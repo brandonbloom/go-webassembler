@@ -14,12 +14,12 @@ call,x,10,t1[],t2[]
 callindirect,x y,11,t1[] i32,t2[]
 drop,,1A,t,
 select,,1B,t t i32,t
-select,t,1C,t t i32,t
-localget,x,20,,t
-localset,x,21,t,
-localtee,x,22,t,t
-globalget,x,23,,t
-globalset,x,24,t,
+select_typed,t,1C,t t i32,t
+localget,local,20,,t
+localset,local,21,t,
+localtee,local,22,t,t
+globalget,global,23,,t
+globalset,global,24,t,
 tableget,x,25,i32,t
 tableset,x,26,i32 t,
 i32.load,memarg,28,i32,i32

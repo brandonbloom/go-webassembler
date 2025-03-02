@@ -5,2641 +5,2651 @@ package webassembler
 // Writer methods for WebAssembly instructions
 
 // unreachable ( t1[] -- t2[] )
-func (a *CodeAssembler) Unreachable() {
-	a.WriteByte(0x00)
+func (c *Code) Unreachable() {
+	c.buf.WriteRawByte(0x00)
 }
 
-// nop
-func (a *CodeAssembler) Nop() {
-	a.WriteByte(0x01)
+// nop ( -- )
+func (c *Code) Nop() {
+	c.buf.WriteRawByte(0x01)
 }
 
 // block bt ( t1[] -- t2[] )
-func (a *CodeAssembler) Block(blocktype uint8) {
-	a.WriteByte(0x02)
-	a.WriteByte(byte(blocktype))
+func (c *Code) Block(blockType TypeIdx) {
+	c.buf.WriteRawByte(0x02)
+	c.buf.WriteTypeIdx(blockType)
 }
 
 // loop bt ( t1[] -- t2[] )
-func (a *CodeAssembler) Loop(blocktype uint8) {
-	a.WriteByte(0x03)
-	a.WriteByte(byte(blocktype))
+func (c *Code) Loop(blockType TypeIdx) {
+	c.buf.WriteRawByte(0x03)
+	c.buf.WriteTypeIdx(blockType)
 }
 
 // if bt ( t1[] i32 -- t2[] )
-func (a *CodeAssembler) If(blocktype uint8) {
-	a.WriteByte(0x04)
-	a.WriteByte(byte(blocktype))
+func (c *Code) If(blockType TypeIdx) {
+	c.buf.WriteRawByte(0x04)
+	c.buf.WriteTypeIdx(blockType)
 }
 
-// else
-func (a *CodeAssembler) Else() {
-	a.WriteByte(0x05)
+// else ( -- )
+func (c *Code) Else() {
+	c.buf.WriteRawByte(0x05)
 }
 
-// end
-func (a *CodeAssembler) End() {
-	a.WriteByte(0x0B)
+// end ( -- )
+func (c *Code) End() {
+	c.buf.WriteRawByte(0x0B)
 }
 
 // br l ( t1[] t[] -- t2[] )
-func (a *CodeAssembler) Br(label uint32) {
-	a.WriteByte(0x0C)
-	a.WriteIndex(label)
+func (c *Code) Br(label0 LabelIdx) {
+	c.buf.WriteRawByte(0x0C)
+	c.buf.WriteLabelIdx(label0)
 }
 
 // brif l ( t[] i32 -- t[] )
-func (a *CodeAssembler) Brif(label uint32) {
-	a.WriteByte(0x0D)
-	a.WriteIndex(label)
+func (c *Code) Brif(label0 LabelIdx) {
+	c.buf.WriteRawByte(0x0D)
+	c.buf.WriteLabelIdx(label0)
 }
 
 // brtable l l ( t1[] t[] i32 -- t2[] )
-func (a *CodeAssembler) Brtable(arg1 l l) {
-	a.WriteByte(0x0E)
-	// Unsupported immediate type: l l
+func (c *Code) Brtable(label0 LabelIdx, label1 LabelIdx) {
+	c.buf.WriteRawByte(0x0E)
+	c.buf.WriteLabelIdx(label0)
+	c.buf.WriteLabelIdx(label1)
 }
 
 // return ( t1[] t[] -- t2[] )
-func (a *CodeAssembler) Return() {
-	a.WriteByte(0x0F)
+func (c *Code) Return() {
+	c.buf.WriteRawByte(0x0F)
 }
 
 // call x ( t1[] -- t2[] )
-func (a *CodeAssembler) Call(idx uint32) {
-	a.WriteByte(0x10)
-	a.WriteIndex(idx)
+func (c *Code) Call(idx U32) {
+	c.buf.WriteRawByte(0x10)
+	c.buf.WriteU32(idx)
 }
 
 // callindirect x y ( t1[] i32 -- t2[] )
-func (a *CodeAssembler) Callindirect(arg1 x y) {
-	a.WriteByte(0x11)
-	// Unsupported immediate type: x y
+func (c *Code) Callindirect(idx U32, idx2 U32) {
+	c.buf.WriteRawByte(0x11)
+	c.buf.WriteU32(idx)
+	c.buf.WriteU32(idx2)
 }
 
 // drop ( t -- )
-func (a *CodeAssembler) Drop() {
-	a.WriteByte(0x1A)
+func (c *Code) Drop() {
+	c.buf.WriteRawByte(0x1A)
 }
 
 // select ( t t i32 -- t )
-func (a *CodeAssembler) Select() {
-	a.WriteByte(0x1B)
+func (c *Code) Select() {
+	c.buf.WriteRawByte(0x1B)
 }
 
-// select t ( t t i32 -- t )
-func (a *CodeAssembler) Select(reftype uint8) {
-	a.WriteByte(0x1C)
-	a.WriteByte(byte(reftype))
+// select_typed t ( t t i32 -- t )
+func (c *Code) SelectTyped(typ TypeIdx) {
+	c.buf.WriteRawByte(0x1C)
+	c.buf.WriteTypeIdx(typ)
 }
 
-// localget x ( -- t )
-func (a *CodeAssembler) Localget(idx uint32) {
-	a.WriteByte(0x20)
-	a.WriteIndex(idx)
+// localget local ( -- t )
+func (c *Code) Localget(x LocalIdx) {
+	c.buf.WriteRawByte(0x20)
+	c.buf.WriteLocalIdx(x)
 }
 
-// localset x ( t -- )
-func (a *CodeAssembler) Localset(idx uint32) {
-	a.WriteByte(0x21)
-	a.WriteIndex(idx)
+// localset local ( t -- )
+func (c *Code) Localset(x LocalIdx) {
+	c.buf.WriteRawByte(0x21)
+	c.buf.WriteLocalIdx(x)
 }
 
-// localtee x ( t -- t )
-func (a *CodeAssembler) Localtee(idx uint32) {
-	a.WriteByte(0x22)
-	a.WriteIndex(idx)
+// localtee local ( t -- t )
+func (c *Code) Localtee(x LocalIdx) {
+	c.buf.WriteRawByte(0x22)
+	c.buf.WriteLocalIdx(x)
 }
 
-// globalget x ( -- t )
-func (a *CodeAssembler) Globalget(idx uint32) {
-	a.WriteByte(0x23)
-	a.WriteIndex(idx)
+// globalget global ( -- t )
+func (c *Code) Globalget(x GlobalIdx) {
+	c.buf.WriteRawByte(0x23)
+	c.buf.WriteGlobalIdx(x)
 }
 
-// globalset x ( t -- )
-func (a *CodeAssembler) Globalset(idx uint32) {
-	a.WriteByte(0x24)
-	a.WriteIndex(idx)
+// globalset global ( t -- )
+func (c *Code) Globalset(x GlobalIdx) {
+	c.buf.WriteRawByte(0x24)
+	c.buf.WriteGlobalIdx(x)
 }
 
 // tableget x ( i32 -- t )
-func (a *CodeAssembler) Tableget(idx uint32) {
-	a.WriteByte(0x25)
-	a.WriteIndex(idx)
+func (c *Code) Tableget(idx U32) {
+	c.buf.WriteRawByte(0x25)
+	c.buf.WriteU32(idx)
 }
 
 // tableset x ( i32 t -- )
-func (a *CodeAssembler) Tableset(idx uint32) {
-	a.WriteByte(0x26)
-	a.WriteIndex(idx)
+func (c *Code) Tableset(idx U32) {
+	c.buf.WriteRawByte(0x26)
+	c.buf.WriteU32(idx)
 }
 
 // i32.load memarg ( i32 -- i32 )
-func (a *CodeAssembler) I32_Load(align, offset uint32) {
-	a.WriteByte(0x28)
-	a.MemArg(align, offset)
+func (c *Code) I32_Load(mem MemArg) {
+	c.buf.WriteRawByte(0x28)
+	c.buf.WriteMemArg(mem)
 }
 
 // i64.load memarg ( i32 -- i64 )
-func (a *CodeAssembler) I64_Load(align, offset uint32) {
-	a.WriteByte(0x29)
-	a.MemArg(align, offset)
+func (c *Code) I64_Load(mem MemArg) {
+	c.buf.WriteRawByte(0x29)
+	c.buf.WriteMemArg(mem)
 }
 
 // f32.load memarg ( i32 -- f32 )
-func (a *CodeAssembler) F32_Load(align, offset uint32) {
-	a.WriteByte(0x2A)
-	a.MemArg(align, offset)
+func (c *Code) F32_Load(mem MemArg) {
+	c.buf.WriteRawByte(0x2A)
+	c.buf.WriteMemArg(mem)
 }
 
 // f64.load memarg ( i32 -- f64 )
-func (a *CodeAssembler) F64_Load(align, offset uint32) {
-	a.WriteByte(0x2B)
-	a.MemArg(align, offset)
+func (c *Code) F64_Load(mem MemArg) {
+	c.buf.WriteRawByte(0x2B)
+	c.buf.WriteMemArg(mem)
 }
 
 // i32.load8_s memarg ( i32 -- i32 )
-func (a *CodeAssembler) I32_Load8S(align, offset uint32) {
-	a.WriteByte(0x2C)
-	a.MemArg(align, offset)
+func (c *Code) I32_Load8S(mem MemArg) {
+	c.buf.WriteRawByte(0x2C)
+	c.buf.WriteMemArg(mem)
 }
 
 // i32.load8_u memarg ( i32 -- i32 )
-func (a *CodeAssembler) I32_Load8U(align, offset uint32) {
-	a.WriteByte(0x2D)
-	a.MemArg(align, offset)
+func (c *Code) I32_Load8U(mem MemArg) {
+	c.buf.WriteRawByte(0x2D)
+	c.buf.WriteMemArg(mem)
 }
 
 // i32.load16_s memarg ( i32 -- i32 )
-func (a *CodeAssembler) I32_Load16S(align, offset uint32) {
-	a.WriteByte(0x2E)
-	a.MemArg(align, offset)
+func (c *Code) I32_Load16S(mem MemArg) {
+	c.buf.WriteRawByte(0x2E)
+	c.buf.WriteMemArg(mem)
 }
 
 // i32.load16_u memarg ( i32 -- i32 )
-func (a *CodeAssembler) I32_Load16U(align, offset uint32) {
-	a.WriteByte(0x2F)
-	a.MemArg(align, offset)
+func (c *Code) I32_Load16U(mem MemArg) {
+	c.buf.WriteRawByte(0x2F)
+	c.buf.WriteMemArg(mem)
 }
 
 // i64.load8_s memarg ( i32 -- i64 )
-func (a *CodeAssembler) I64_Load8S(align, offset uint32) {
-	a.WriteByte(0x30)
-	a.MemArg(align, offset)
+func (c *Code) I64_Load8S(mem MemArg) {
+	c.buf.WriteRawByte(0x30)
+	c.buf.WriteMemArg(mem)
 }
 
 // i64.load8_u memarg ( i32 -- i64 )
-func (a *CodeAssembler) I64_Load8U(align, offset uint32) {
-	a.WriteByte(0x31)
-	a.MemArg(align, offset)
+func (c *Code) I64_Load8U(mem MemArg) {
+	c.buf.WriteRawByte(0x31)
+	c.buf.WriteMemArg(mem)
 }
 
 // i64.load16_s memarg ( i32 -- i64 )
-func (a *CodeAssembler) I64_Load16S(align, offset uint32) {
-	a.WriteByte(0x32)
-	a.MemArg(align, offset)
+func (c *Code) I64_Load16S(mem MemArg) {
+	c.buf.WriteRawByte(0x32)
+	c.buf.WriteMemArg(mem)
 }
 
 // i64.load16_u memarg ( i32 -- i64 )
-func (a *CodeAssembler) I64_Load16U(align, offset uint32) {
-	a.WriteByte(0x33)
-	a.MemArg(align, offset)
+func (c *Code) I64_Load16U(mem MemArg) {
+	c.buf.WriteRawByte(0x33)
+	c.buf.WriteMemArg(mem)
 }
 
 // i64.load32_s memarg ( i32 -- i64 )
-func (a *CodeAssembler) I64_Load32S(align, offset uint32) {
-	a.WriteByte(0x34)
-	a.MemArg(align, offset)
+func (c *Code) I64_Load32S(mem MemArg) {
+	c.buf.WriteRawByte(0x34)
+	c.buf.WriteMemArg(mem)
 }
 
 // i64.load32_u memarg ( i32 -- i64 )
-func (a *CodeAssembler) I64_Load32U(align, offset uint32) {
-	a.WriteByte(0x35)
-	a.MemArg(align, offset)
+func (c *Code) I64_Load32U(mem MemArg) {
+	c.buf.WriteRawByte(0x35)
+	c.buf.WriteMemArg(mem)
 }
 
 // i32.store memarg ( i32 i32 -- )
-func (a *CodeAssembler) I32_Store(align, offset uint32) {
-	a.WriteByte(0x36)
-	a.MemArg(align, offset)
+func (c *Code) I32_Store(mem MemArg) {
+	c.buf.WriteRawByte(0x36)
+	c.buf.WriteMemArg(mem)
 }
 
 // i64.store memarg ( i32 i64 -- )
-func (a *CodeAssembler) I64_Store(align, offset uint32) {
-	a.WriteByte(0x37)
-	a.MemArg(align, offset)
+func (c *Code) I64_Store(mem MemArg) {
+	c.buf.WriteRawByte(0x37)
+	c.buf.WriteMemArg(mem)
 }
 
 // f32.store memarg ( i32 f32 -- )
-func (a *CodeAssembler) F32_Store(align, offset uint32) {
-	a.WriteByte(0x38)
-	a.MemArg(align, offset)
+func (c *Code) F32_Store(mem MemArg) {
+	c.buf.WriteRawByte(0x38)
+	c.buf.WriteMemArg(mem)
 }
 
 // f64.store memarg ( i32 f64 -- )
-func (a *CodeAssembler) F64_Store(align, offset uint32) {
-	a.WriteByte(0x39)
-	a.MemArg(align, offset)
+func (c *Code) F64_Store(mem MemArg) {
+	c.buf.WriteRawByte(0x39)
+	c.buf.WriteMemArg(mem)
 }
 
 // i32.store8 memarg ( i32 i32 -- )
-func (a *CodeAssembler) I32_Store8(align, offset uint32) {
-	a.WriteByte(0x3A)
-	a.MemArg(align, offset)
+func (c *Code) I32_Store8(mem MemArg) {
+	c.buf.WriteRawByte(0x3A)
+	c.buf.WriteMemArg(mem)
 }
 
 // i32.store16 memarg ( i32 i32 -- )
-func (a *CodeAssembler) I32_Store16(align, offset uint32) {
-	a.WriteByte(0x3B)
-	a.MemArg(align, offset)
+func (c *Code) I32_Store16(mem MemArg) {
+	c.buf.WriteRawByte(0x3B)
+	c.buf.WriteMemArg(mem)
 }
 
 // i64.store8 memarg ( i32 i64 -- )
-func (a *CodeAssembler) I64_Store8(align, offset uint32) {
-	a.WriteByte(0x3C)
-	a.MemArg(align, offset)
+func (c *Code) I64_Store8(mem MemArg) {
+	c.buf.WriteRawByte(0x3C)
+	c.buf.WriteMemArg(mem)
 }
 
 // i64.store16 memarg ( i32 i64 -- )
-func (a *CodeAssembler) I64_Store16(align, offset uint32) {
-	a.WriteByte(0x3D)
-	a.MemArg(align, offset)
+func (c *Code) I64_Store16(mem MemArg) {
+	c.buf.WriteRawByte(0x3D)
+	c.buf.WriteMemArg(mem)
 }
 
 // i64.store32 memarg ( i32 i64 -- )
-func (a *CodeAssembler) I64_Store32(align, offset uint32) {
-	a.WriteByte(0x3E)
-	a.MemArg(align, offset)
+func (c *Code) I64_Store32(mem MemArg) {
+	c.buf.WriteRawByte(0x3E)
+	c.buf.WriteMemArg(mem)
 }
 
 // memorysize ( -- i32 )
-func (a *CodeAssembler) Memorysize() {
-	a.WriteByte(0x3F)
+func (c *Code) Memorysize() {
+	c.buf.WriteRawByte(0x3F)
 }
 
 // memorygrow ( i32 -- i32 )
-func (a *CodeAssembler) Memorygrow() {
-	a.WriteByte(0x40)
+func (c *Code) Memorygrow() {
+	c.buf.WriteRawByte(0x40)
 }
 
 // i32.const i32 ( -- i32 )
-func (a *CodeAssembler) I32_Const(val int32) {
-	a.WriteByte(0x41)
-	a.WriteI32(val)
+func (c *Code) I32_Const(val I32) {
+	c.buf.WriteRawByte(0x41)
+	c.buf.WriteI32(val)
 }
 
 // i64.const i64 ( -- i64 )
-func (a *CodeAssembler) I64_Const(val int64) {
-	a.WriteByte(0x42)
-	a.WriteI64(val)
+func (c *Code) I64_Const(val I64) {
+	c.buf.WriteRawByte(0x42)
+	c.buf.WriteI64(val)
 }
 
 // f32.const f32 ( -- f32 )
-func (a *CodeAssembler) F32_Const(val float32) {
-	a.WriteByte(0x43)
-	a.WriteF32(val)
+func (c *Code) F32_Const(val F32) {
+	c.buf.WriteRawByte(0x43)
+	c.buf.WriteF32(val)
 }
 
 // f64.const f64 ( -- f64 )
-func (a *CodeAssembler) F64_Const(val float64) {
-	a.WriteByte(0x44)
-	a.WriteF64(val)
+func (c *Code) F64_Const(val F64) {
+	c.buf.WriteRawByte(0x44)
+	c.buf.WriteF64(val)
 }
 
 // i32.eqz ( i32 -- i32 )
-func (a *CodeAssembler) I32_Eqz() {
-	a.WriteByte(0x45)
+func (c *Code) I32_Eqz() {
+	c.buf.WriteRawByte(0x45)
 }
 
 // i32.eq ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_Eq() {
-	a.WriteByte(0x46)
+func (c *Code) I32_Eq() {
+	c.buf.WriteRawByte(0x46)
 }
 
 // i32.ne ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_Ne() {
-	a.WriteByte(0x47)
+func (c *Code) I32_Ne() {
+	c.buf.WriteRawByte(0x47)
 }
 
 // i32.lt_s ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_LtS() {
-	a.WriteByte(0x48)
+func (c *Code) I32_LtS() {
+	c.buf.WriteRawByte(0x48)
 }
 
 // i32.lt_u ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_LtU() {
-	a.WriteByte(0x49)
+func (c *Code) I32_LtU() {
+	c.buf.WriteRawByte(0x49)
 }
 
 // i32.gt_s ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_GtS() {
-	a.WriteByte(0x4A)
+func (c *Code) I32_GtS() {
+	c.buf.WriteRawByte(0x4A)
 }
 
 // i32.gt_u ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_GtU() {
-	a.WriteByte(0x4B)
+func (c *Code) I32_GtU() {
+	c.buf.WriteRawByte(0x4B)
 }
 
 // i32.le_s ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_LeS() {
-	a.WriteByte(0x4C)
+func (c *Code) I32_LeS() {
+	c.buf.WriteRawByte(0x4C)
 }
 
 // i32.le_u ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_LeU() {
-	a.WriteByte(0x4D)
+func (c *Code) I32_LeU() {
+	c.buf.WriteRawByte(0x4D)
 }
 
 // i32.ge_s ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_GeS() {
-	a.WriteByte(0x4E)
+func (c *Code) I32_GeS() {
+	c.buf.WriteRawByte(0x4E)
 }
 
 // i32.ge_u ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_GeU() {
-	a.WriteByte(0x4F)
+func (c *Code) I32_GeU() {
+	c.buf.WriteRawByte(0x4F)
 }
 
 // i64.eqz ( i64 -- i32 )
-func (a *CodeAssembler) I64_Eqz() {
-	a.WriteByte(0x50)
+func (c *Code) I64_Eqz() {
+	c.buf.WriteRawByte(0x50)
 }
 
 // i64.eq ( i64 i64 -- i32 )
-func (a *CodeAssembler) I64_Eq() {
-	a.WriteByte(0x51)
+func (c *Code) I64_Eq() {
+	c.buf.WriteRawByte(0x51)
 }
 
 // i64.ne ( i64 i64 -- i32 )
-func (a *CodeAssembler) I64_Ne() {
-	a.WriteByte(0x52)
+func (c *Code) I64_Ne() {
+	c.buf.WriteRawByte(0x52)
 }
 
 // i64.lt_s ( i64 i64 -- i32 )
-func (a *CodeAssembler) I64_LtS() {
-	a.WriteByte(0x53)
+func (c *Code) I64_LtS() {
+	c.buf.WriteRawByte(0x53)
 }
 
 // i64.lt_u ( i64 i64 -- i32 )
-func (a *CodeAssembler) I64_LtU() {
-	a.WriteByte(0x54)
+func (c *Code) I64_LtU() {
+	c.buf.WriteRawByte(0x54)
 }
 
 // i64.gt_s ( i64 i64 -- i32 )
-func (a *CodeAssembler) I64_GtS() {
-	a.WriteByte(0x55)
+func (c *Code) I64_GtS() {
+	c.buf.WriteRawByte(0x55)
 }
 
 // i64.gt_u ( i64 i64 -- i32 )
-func (a *CodeAssembler) I64_GtU() {
-	a.WriteByte(0x56)
+func (c *Code) I64_GtU() {
+	c.buf.WriteRawByte(0x56)
 }
 
 // i64.le_s ( i64 i64 -- i32 )
-func (a *CodeAssembler) I64_LeS() {
-	a.WriteByte(0x57)
+func (c *Code) I64_LeS() {
+	c.buf.WriteRawByte(0x57)
 }
 
 // i64.le_u ( i64 i64 -- i32 )
-func (a *CodeAssembler) I64_LeU() {
-	a.WriteByte(0x58)
+func (c *Code) I64_LeU() {
+	c.buf.WriteRawByte(0x58)
 }
 
 // i64.ge_s ( i64 i64 -- i32 )
-func (a *CodeAssembler) I64_GeS() {
-	a.WriteByte(0x59)
+func (c *Code) I64_GeS() {
+	c.buf.WriteRawByte(0x59)
 }
 
 // i64.ge_u ( i64 i64 -- i32 )
-func (a *CodeAssembler) I64_GeU() {
-	a.WriteByte(0x5A)
+func (c *Code) I64_GeU() {
+	c.buf.WriteRawByte(0x5A)
 }
 
 // f32.eq ( f32 f32 -- i32 )
-func (a *CodeAssembler) F32_Eq() {
-	a.WriteByte(0x5B)
+func (c *Code) F32_Eq() {
+	c.buf.WriteRawByte(0x5B)
 }
 
 // f32.ne ( f32 f32 -- i32 )
-func (a *CodeAssembler) F32_Ne() {
-	a.WriteByte(0x5C)
+func (c *Code) F32_Ne() {
+	c.buf.WriteRawByte(0x5C)
 }
 
 // f32.lt ( f32 f32 -- i32 )
-func (a *CodeAssembler) F32_Lt() {
-	a.WriteByte(0x5D)
+func (c *Code) F32_Lt() {
+	c.buf.WriteRawByte(0x5D)
 }
 
 // f32.gt ( f32 f32 -- i32 )
-func (a *CodeAssembler) F32_Gt() {
-	a.WriteByte(0x5E)
+func (c *Code) F32_Gt() {
+	c.buf.WriteRawByte(0x5E)
 }
 
 // f32.le ( f32 f32 -- i32 )
-func (a *CodeAssembler) F32_Le() {
-	a.WriteByte(0x5F)
+func (c *Code) F32_Le() {
+	c.buf.WriteRawByte(0x5F)
 }
 
 // f32.ge ( f32 f32 -- i32 )
-func (a *CodeAssembler) F32_Ge() {
-	a.WriteByte(0x60)
+func (c *Code) F32_Ge() {
+	c.buf.WriteRawByte(0x60)
 }
 
 // f64.eq ( f64 f64 -- i32 )
-func (a *CodeAssembler) F64_Eq() {
-	a.WriteByte(0x61)
+func (c *Code) F64_Eq() {
+	c.buf.WriteRawByte(0x61)
 }
 
 // f64.ne ( f64 f64 -- i32 )
-func (a *CodeAssembler) F64_Ne() {
-	a.WriteByte(0x62)
+func (c *Code) F64_Ne() {
+	c.buf.WriteRawByte(0x62)
 }
 
 // f64.lt ( f64 f64 -- i32 )
-func (a *CodeAssembler) F64_Lt() {
-	a.WriteByte(0x63)
+func (c *Code) F64_Lt() {
+	c.buf.WriteRawByte(0x63)
 }
 
 // f64.gt ( f64 f64 -- i32 )
-func (a *CodeAssembler) F64_Gt() {
-	a.WriteByte(0x64)
+func (c *Code) F64_Gt() {
+	c.buf.WriteRawByte(0x64)
 }
 
 // f64.le ( f64 f64 -- i32 )
-func (a *CodeAssembler) F64_Le() {
-	a.WriteByte(0x65)
+func (c *Code) F64_Le() {
+	c.buf.WriteRawByte(0x65)
 }
 
 // f64.ge ( f64 f64 -- i32 )
-func (a *CodeAssembler) F64_Ge() {
-	a.WriteByte(0x66)
+func (c *Code) F64_Ge() {
+	c.buf.WriteRawByte(0x66)
 }
 
 // i32.clz ( i32 -- i32 )
-func (a *CodeAssembler) I32_Clz() {
-	a.WriteByte(0x67)
+func (c *Code) I32_Clz() {
+	c.buf.WriteRawByte(0x67)
 }
 
 // i32.ctz ( i32 -- i32 )
-func (a *CodeAssembler) I32_Ctz() {
-	a.WriteByte(0x68)
+func (c *Code) I32_Ctz() {
+	c.buf.WriteRawByte(0x68)
 }
 
 // i32.popcnt ( i32 -- i32 )
-func (a *CodeAssembler) I32_Popcnt() {
-	a.WriteByte(0x69)
+func (c *Code) I32_Popcnt() {
+	c.buf.WriteRawByte(0x69)
 }
 
 // i32.add ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_Add() {
-	a.WriteByte(0x6A)
+func (c *Code) I32_Add() {
+	c.buf.WriteRawByte(0x6A)
 }
 
 // i32.sub ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_Sub() {
-	a.WriteByte(0x6B)
+func (c *Code) I32_Sub() {
+	c.buf.WriteRawByte(0x6B)
 }
 
 // i32.mul ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_Mul() {
-	a.WriteByte(0x6C)
+func (c *Code) I32_Mul() {
+	c.buf.WriteRawByte(0x6C)
 }
 
 // i32.div_s ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_DivS() {
-	a.WriteByte(0x6D)
+func (c *Code) I32_DivS() {
+	c.buf.WriteRawByte(0x6D)
 }
 
 // i32.div_u ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_DivU() {
-	a.WriteByte(0x6E)
+func (c *Code) I32_DivU() {
+	c.buf.WriteRawByte(0x6E)
 }
 
 // i32.rem_s ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_RemS() {
-	a.WriteByte(0x6F)
+func (c *Code) I32_RemS() {
+	c.buf.WriteRawByte(0x6F)
 }
 
 // i32.rem_u ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_RemU() {
-	a.WriteByte(0x70)
+func (c *Code) I32_RemU() {
+	c.buf.WriteRawByte(0x70)
 }
 
 // i32.and ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_And() {
-	a.WriteByte(0x71)
+func (c *Code) I32_And() {
+	c.buf.WriteRawByte(0x71)
 }
 
 // i32.or ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_Or() {
-	a.WriteByte(0x72)
+func (c *Code) I32_Or() {
+	c.buf.WriteRawByte(0x72)
 }
 
 // i32.xor ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_Xor() {
-	a.WriteByte(0x73)
+func (c *Code) I32_Xor() {
+	c.buf.WriteRawByte(0x73)
 }
 
 // i32.shl ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_Shl() {
-	a.WriteByte(0x74)
+func (c *Code) I32_Shl() {
+	c.buf.WriteRawByte(0x74)
 }
 
 // i32.shr_s ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_ShrS() {
-	a.WriteByte(0x75)
+func (c *Code) I32_ShrS() {
+	c.buf.WriteRawByte(0x75)
 }
 
 // i32.shr_u ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_ShrU() {
-	a.WriteByte(0x76)
+func (c *Code) I32_ShrU() {
+	c.buf.WriteRawByte(0x76)
 }
 
 // i32.rotl ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_Rotl() {
-	a.WriteByte(0x77)
+func (c *Code) I32_Rotl() {
+	c.buf.WriteRawByte(0x77)
 }
 
 // i32.rotr ( i32 i32 -- i32 )
-func (a *CodeAssembler) I32_Rotr() {
-	a.WriteByte(0x78)
+func (c *Code) I32_Rotr() {
+	c.buf.WriteRawByte(0x78)
 }
 
 // i64.clz ( i64 -- i64 )
-func (a *CodeAssembler) I64_Clz() {
-	a.WriteByte(0x79)
+func (c *Code) I64_Clz() {
+	c.buf.WriteRawByte(0x79)
 }
 
 // i64.ctz ( i64 -- i64 )
-func (a *CodeAssembler) I64_Ctz() {
-	a.WriteByte(0x7A)
+func (c *Code) I64_Ctz() {
+	c.buf.WriteRawByte(0x7A)
 }
 
 // i64.popcnt ( i64 -- i64 )
-func (a *CodeAssembler) I64_Popcnt() {
-	a.WriteByte(0x7B)
+func (c *Code) I64_Popcnt() {
+	c.buf.WriteRawByte(0x7B)
 }
 
 // i64.add ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_Add() {
-	a.WriteByte(0x7C)
+func (c *Code) I64_Add() {
+	c.buf.WriteRawByte(0x7C)
 }
 
 // i64.sub ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_Sub() {
-	a.WriteByte(0x7D)
+func (c *Code) I64_Sub() {
+	c.buf.WriteRawByte(0x7D)
 }
 
 // i64.mul ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_Mul() {
-	a.WriteByte(0x7E)
+func (c *Code) I64_Mul() {
+	c.buf.WriteRawByte(0x7E)
 }
 
 // i64.div_s ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_DivS() {
-	a.WriteByte(0x7F)
+func (c *Code) I64_DivS() {
+	c.buf.WriteRawByte(0x7F)
 }
 
 // i64.div_u ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_DivU() {
-	a.WriteByte(0x80)
+func (c *Code) I64_DivU() {
+	c.buf.WriteRawByte(0x80)
 }
 
 // i64.rem_s ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_RemS() {
-	a.WriteByte(0x81)
+func (c *Code) I64_RemS() {
+	c.buf.WriteRawByte(0x81)
 }
 
 // i64.rem_u ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_RemU() {
-	a.WriteByte(0x82)
+func (c *Code) I64_RemU() {
+	c.buf.WriteRawByte(0x82)
 }
 
 // i64.and ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_And() {
-	a.WriteByte(0x83)
+func (c *Code) I64_And() {
+	c.buf.WriteRawByte(0x83)
 }
 
 // i64.or ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_Or() {
-	a.WriteByte(0x84)
+func (c *Code) I64_Or() {
+	c.buf.WriteRawByte(0x84)
 }
 
 // i64.xor ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_Xor() {
-	a.WriteByte(0x85)
+func (c *Code) I64_Xor() {
+	c.buf.WriteRawByte(0x85)
 }
 
 // i64.shl ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_Shl() {
-	a.WriteByte(0x86)
+func (c *Code) I64_Shl() {
+	c.buf.WriteRawByte(0x86)
 }
 
 // i64.shr_s ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_ShrS() {
-	a.WriteByte(0x87)
+func (c *Code) I64_ShrS() {
+	c.buf.WriteRawByte(0x87)
 }
 
 // i64.shr_u ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_ShrU() {
-	a.WriteByte(0x88)
+func (c *Code) I64_ShrU() {
+	c.buf.WriteRawByte(0x88)
 }
 
 // i64.rotl ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_Rotl() {
-	a.WriteByte(0x89)
+func (c *Code) I64_Rotl() {
+	c.buf.WriteRawByte(0x89)
 }
 
 // i64.rotr ( i64 i64 -- i64 )
-func (a *CodeAssembler) I64_Rotr() {
-	a.WriteByte(0x8A)
+func (c *Code) I64_Rotr() {
+	c.buf.WriteRawByte(0x8A)
 }
 
 // f32.abs ( f32 -- f32 )
-func (a *CodeAssembler) F32_Abs() {
-	a.WriteByte(0x8B)
+func (c *Code) F32_Abs() {
+	c.buf.WriteRawByte(0x8B)
 }
 
 // f32.neg ( f32 -- f32 )
-func (a *CodeAssembler) F32_Neg() {
-	a.WriteByte(0x8C)
+func (c *Code) F32_Neg() {
+	c.buf.WriteRawByte(0x8C)
 }
 
 // f32.ceil ( f32 -- f32 )
-func (a *CodeAssembler) F32_Ceil() {
-	a.WriteByte(0x8D)
+func (c *Code) F32_Ceil() {
+	c.buf.WriteRawByte(0x8D)
 }
 
 // f32.floor ( f32 -- f32 )
-func (a *CodeAssembler) F32_Floor() {
-	a.WriteByte(0x8E)
+func (c *Code) F32_Floor() {
+	c.buf.WriteRawByte(0x8E)
 }
 
 // f32.trunc ( f32 -- f32 )
-func (a *CodeAssembler) F32_Trunc() {
-	a.WriteByte(0x8F)
+func (c *Code) F32_Trunc() {
+	c.buf.WriteRawByte(0x8F)
 }
 
 // f32.nearest ( f32 -- f32 )
-func (a *CodeAssembler) F32_Nearest() {
-	a.WriteByte(0x90)
+func (c *Code) F32_Nearest() {
+	c.buf.WriteRawByte(0x90)
 }
 
 // f32.sqrt ( f32 -- f32 )
-func (a *CodeAssembler) F32_Sqrt() {
-	a.WriteByte(0x91)
+func (c *Code) F32_Sqrt() {
+	c.buf.WriteRawByte(0x91)
 }
 
 // f32.add ( f32 f32 -- f32 )
-func (a *CodeAssembler) F32_Add() {
-	a.WriteByte(0x92)
+func (c *Code) F32_Add() {
+	c.buf.WriteRawByte(0x92)
 }
 
 // f32.sub ( f32 f32 -- f32 )
-func (a *CodeAssembler) F32_Sub() {
-	a.WriteByte(0x93)
+func (c *Code) F32_Sub() {
+	c.buf.WriteRawByte(0x93)
 }
 
 // f32.mul ( f32 f32 -- f32 )
-func (a *CodeAssembler) F32_Mul() {
-	a.WriteByte(0x94)
+func (c *Code) F32_Mul() {
+	c.buf.WriteRawByte(0x94)
 }
 
 // f32.div ( f32 f32 -- f32 )
-func (a *CodeAssembler) F32_Div() {
-	a.WriteByte(0x95)
+func (c *Code) F32_Div() {
+	c.buf.WriteRawByte(0x95)
 }
 
 // f32.fmin ( f32 f32 -- f32 )
-func (a *CodeAssembler) F32_Fmin() {
-	a.WriteByte(0x96)
+func (c *Code) F32_Fmin() {
+	c.buf.WriteRawByte(0x96)
 }
 
 // f32.fmax ( f32 f32 -- f32 )
-func (a *CodeAssembler) F32_Fmax() {
-	a.WriteByte(0x97)
+func (c *Code) F32_Fmax() {
+	c.buf.WriteRawByte(0x97)
 }
 
 // f32.copysign ( f32 f32 -- f32 )
-func (a *CodeAssembler) F32_Copysign() {
-	a.WriteByte(0x98)
+func (c *Code) F32_Copysign() {
+	c.buf.WriteRawByte(0x98)
 }
 
 // f64.abs ( f64 -- f64 )
-func (a *CodeAssembler) F64_Abs() {
-	a.WriteByte(0x99)
+func (c *Code) F64_Abs() {
+	c.buf.WriteRawByte(0x99)
 }
 
 // f64.neg ( f64 -- f64 )
-func (a *CodeAssembler) F64_Neg() {
-	a.WriteByte(0x9A)
+func (c *Code) F64_Neg() {
+	c.buf.WriteRawByte(0x9A)
 }
 
 // f64.ceil ( f64 -- f64 )
-func (a *CodeAssembler) F64_Ceil() {
-	a.WriteByte(0x9B)
+func (c *Code) F64_Ceil() {
+	c.buf.WriteRawByte(0x9B)
 }
 
 // f64.floor ( f64 -- f64 )
-func (a *CodeAssembler) F64_Floor() {
-	a.WriteByte(0x9C)
+func (c *Code) F64_Floor() {
+	c.buf.WriteRawByte(0x9C)
 }
 
 // f64.trunc ( f64 -- f64 )
-func (a *CodeAssembler) F64_Trunc() {
-	a.WriteByte(0x9D)
+func (c *Code) F64_Trunc() {
+	c.buf.WriteRawByte(0x9D)
 }
 
 // f64.nearest ( f64 -- f64 )
-func (a *CodeAssembler) F64_Nearest() {
-	a.WriteByte(0x9E)
+func (c *Code) F64_Nearest() {
+	c.buf.WriteRawByte(0x9E)
 }
 
 // f64.sqrt ( f64 -- f64 )
-func (a *CodeAssembler) F64_Sqrt() {
-	a.WriteByte(0x9F)
+func (c *Code) F64_Sqrt() {
+	c.buf.WriteRawByte(0x9F)
 }
 
 // f64.add ( f64 f64 -- f64 )
-func (a *CodeAssembler) F64_Add() {
-	a.WriteByte(0xA0)
+func (c *Code) F64_Add() {
+	c.buf.WriteRawByte(0xA0)
 }
 
 // f64.sub ( f64 f64 -- f64 )
-func (a *CodeAssembler) F64_Sub() {
-	a.WriteByte(0xA1)
+func (c *Code) F64_Sub() {
+	c.buf.WriteRawByte(0xA1)
 }
 
 // f64.mul ( f64 f64 -- f64 )
-func (a *CodeAssembler) F64_Mul() {
-	a.WriteByte(0xA2)
+func (c *Code) F64_Mul() {
+	c.buf.WriteRawByte(0xA2)
 }
 
 // f64.div ( f64 f64 -- f64 )
-func (a *CodeAssembler) F64_Div() {
-	a.WriteByte(0xA3)
+func (c *Code) F64_Div() {
+	c.buf.WriteRawByte(0xA3)
 }
 
 // f64.fmin ( f64 f64 -- f64 )
-func (a *CodeAssembler) F64_Fmin() {
-	a.WriteByte(0xA4)
+func (c *Code) F64_Fmin() {
+	c.buf.WriteRawByte(0xA4)
 }
 
 // f64.fmax ( f64 f64 -- f64 )
-func (a *CodeAssembler) F64_Fmax() {
-	a.WriteByte(0xA5)
+func (c *Code) F64_Fmax() {
+	c.buf.WriteRawByte(0xA5)
 }
 
 // f64.copysign ( f64 f64 -- f64 )
-func (a *CodeAssembler) F64_Copysign() {
-	a.WriteByte(0xA6)
+func (c *Code) F64_Copysign() {
+	c.buf.WriteRawByte(0xA6)
 }
 
 // i32.wrap_i64 ( i64 -- i32 )
-func (a *CodeAssembler) I32_WrapI64() {
-	a.WriteByte(0xA7)
+func (c *Code) I32_WrapI64() {
+	c.buf.WriteRawByte(0xA7)
 }
 
 // i32.trunc_f32_s ( f32 -- i32 )
-func (a *CodeAssembler) I32_TruncF32S() {
-	a.WriteByte(0xA8)
+func (c *Code) I32_TruncF32S() {
+	c.buf.WriteRawByte(0xA8)
 }
 
 // i32.trunc_f32_u ( f32 -- i32 )
-func (a *CodeAssembler) I32_TruncF32U() {
-	a.WriteByte(0xA9)
+func (c *Code) I32_TruncF32U() {
+	c.buf.WriteRawByte(0xA9)
 }
 
 // i32.trunc_f64_s ( f64 -- i32 )
-func (a *CodeAssembler) I32_TruncF64S() {
-	a.WriteByte(0xAA)
+func (c *Code) I32_TruncF64S() {
+	c.buf.WriteRawByte(0xAA)
 }
 
 // i32.trunc_f64_u ( f64 -- i32 )
-func (a *CodeAssembler) I32_TruncF64U() {
-	a.WriteByte(0xAB)
+func (c *Code) I32_TruncF64U() {
+	c.buf.WriteRawByte(0xAB)
 }
 
 // i64.extend_i32_s ( i32 -- i64 )
-func (a *CodeAssembler) I64_ExtendI32S() {
-	a.WriteByte(0xAC)
+func (c *Code) I64_ExtendI32S() {
+	c.buf.WriteRawByte(0xAC)
 }
 
 // i64.extend_i32_u ( i32 -- i64 )
-func (a *CodeAssembler) I64_ExtendI32U() {
-	a.WriteByte(0xAD)
+func (c *Code) I64_ExtendI32U() {
+	c.buf.WriteRawByte(0xAD)
 }
 
 // i64.trunc_f32_s ( f32 -- i64 )
-func (a *CodeAssembler) I64_TruncF32S() {
-	a.WriteByte(0xAE)
+func (c *Code) I64_TruncF32S() {
+	c.buf.WriteRawByte(0xAE)
 }
 
 // i64.trunc_f32_u ( f32 -- i64 )
-func (a *CodeAssembler) I64_TruncF32U() {
-	a.WriteByte(0xAF)
+func (c *Code) I64_TruncF32U() {
+	c.buf.WriteRawByte(0xAF)
 }
 
 // i64.trunc_f64_s ( f64 -- i64 )
-func (a *CodeAssembler) I64_TruncF64S() {
-	a.WriteByte(0xB0)
+func (c *Code) I64_TruncF64S() {
+	c.buf.WriteRawByte(0xB0)
 }
 
 // i64.trunc_f64_u ( f64 -- i64 )
-func (a *CodeAssembler) I64_TruncF64U() {
-	a.WriteByte(0xB1)
+func (c *Code) I64_TruncF64U() {
+	c.buf.WriteRawByte(0xB1)
 }
 
 // f32.convert_i32_s ( i32 -- f32 )
-func (a *CodeAssembler) F32_ConvertI32S() {
-	a.WriteByte(0xB2)
+func (c *Code) F32_ConvertI32S() {
+	c.buf.WriteRawByte(0xB2)
 }
 
 // f32.convert_i32_u ( i32 -- f32 )
-func (a *CodeAssembler) F32_ConvertI32U() {
-	a.WriteByte(0xB3)
+func (c *Code) F32_ConvertI32U() {
+	c.buf.WriteRawByte(0xB3)
 }
 
 // f32.convert_i64_s ( i64 -- f32 )
-func (a *CodeAssembler) F32_ConvertI64S() {
-	a.WriteByte(0xB4)
+func (c *Code) F32_ConvertI64S() {
+	c.buf.WriteRawByte(0xB4)
 }
 
 // f32.convert_i64_u ( i64 -- f32 )
-func (a *CodeAssembler) F32_ConvertI64U() {
-	a.WriteByte(0xB5)
+func (c *Code) F32_ConvertI64U() {
+	c.buf.WriteRawByte(0xB5)
 }
 
 // f32.demote_f64 ( f64 -- f32 )
-func (a *CodeAssembler) F32_DemoteF64() {
-	a.WriteByte(0xB6)
+func (c *Code) F32_DemoteF64() {
+	c.buf.WriteRawByte(0xB6)
 }
 
 // f64.convert_i32_s ( i32 -- f64 )
-func (a *CodeAssembler) F64_ConvertI32S() {
-	a.WriteByte(0xB7)
+func (c *Code) F64_ConvertI32S() {
+	c.buf.WriteRawByte(0xB7)
 }
 
 // f64.convert_i32_u ( i32 -- f64 )
-func (a *CodeAssembler) F64_ConvertI32U() {
-	a.WriteByte(0xB8)
+func (c *Code) F64_ConvertI32U() {
+	c.buf.WriteRawByte(0xB8)
 }
 
 // f64.convert_i64_s ( i64 -- f64 )
-func (a *CodeAssembler) F64_ConvertI64S() {
-	a.WriteByte(0xB9)
+func (c *Code) F64_ConvertI64S() {
+	c.buf.WriteRawByte(0xB9)
 }
 
 // f64.convert_i64_u ( i64 -- f64 )
-func (a *CodeAssembler) F64_ConvertI64U() {
-	a.WriteByte(0xBA)
+func (c *Code) F64_ConvertI64U() {
+	c.buf.WriteRawByte(0xBA)
 }
 
 // f64.promote_f32 ( f32 -- f64 )
-func (a *CodeAssembler) F64_PromoteF32() {
-	a.WriteByte(0xBB)
+func (c *Code) F64_PromoteF32() {
+	c.buf.WriteRawByte(0xBB)
 }
 
 // i32.reinterpret_f32 ( f32 -- i32 )
-func (a *CodeAssembler) I32_ReinterpretF32() {
-	a.WriteByte(0xBC)
+func (c *Code) I32_ReinterpretF32() {
+	c.buf.WriteRawByte(0xBC)
 }
 
 // i64.reinterpret_f64 ( f64 -- i64 )
-func (a *CodeAssembler) I64_ReinterpretF64() {
-	a.WriteByte(0xBD)
+func (c *Code) I64_ReinterpretF64() {
+	c.buf.WriteRawByte(0xBD)
 }
 
 // f32.reinterpret_i32 ( i32 -- f32 )
-func (a *CodeAssembler) F32_ReinterpretI32() {
-	a.WriteByte(0xBE)
+func (c *Code) F32_ReinterpretI32() {
+	c.buf.WriteRawByte(0xBE)
 }
 
 // f64.reinterpret_i64 ( i64 -- f64 )
-func (a *CodeAssembler) F64_ReinterpretI64() {
-	a.WriteByte(0xBF)
+func (c *Code) F64_ReinterpretI64() {
+	c.buf.WriteRawByte(0xBF)
 }
 
 // i32.extend8_s ( i32 -- i32 )
-func (a *CodeAssembler) I32_Extend8S() {
-	a.WriteByte(0xC0)
+func (c *Code) I32_Extend8S() {
+	c.buf.WriteRawByte(0xC0)
 }
 
 // i32.extend16_s ( i32 -- i32 )
-func (a *CodeAssembler) I32_Extend16S() {
-	a.WriteByte(0xC1)
+func (c *Code) I32_Extend16S() {
+	c.buf.WriteRawByte(0xC1)
 }
 
 // i64.extend8_s ( i64 -- i64 )
-func (a *CodeAssembler) I64_Extend8S() {
-	a.WriteByte(0xC2)
+func (c *Code) I64_Extend8S() {
+	c.buf.WriteRawByte(0xC2)
 }
 
 // i64.extend16_s ( i64 -- i64 )
-func (a *CodeAssembler) I64_Extend16S() {
-	a.WriteByte(0xC3)
+func (c *Code) I64_Extend16S() {
+	c.buf.WriteRawByte(0xC3)
 }
 
 // i64.extend32_s ( i64 -- i64 )
-func (a *CodeAssembler) I64_Extend32S() {
-	a.WriteByte(0xC4)
+func (c *Code) I64_Extend32S() {
+	c.buf.WriteRawByte(0xC4)
 }
 
 // refnull t ( -- t )
-func (a *CodeAssembler) Refnull(reftype uint8) {
-	a.WriteByte(0xD0)
-	a.WriteByte(byte(reftype))
+func (c *Code) Refnull(typ TypeIdx) {
+	c.buf.WriteRawByte(0xD0)
+	c.buf.WriteTypeIdx(typ)
 }
 
 // refisnull ( t -- i32 )
-func (a *CodeAssembler) Refisnull() {
-	a.WriteByte(0xD1)
+func (c *Code) Refisnull() {
+	c.buf.WriteRawByte(0xD1)
 }
 
 // reffunc x ( -- funcref )
-func (a *CodeAssembler) Reffunc(idx uint32) {
-	a.WriteByte(0xD2)
-	a.WriteIndex(idx)
+func (c *Code) Reffunc(idx U32) {
+	c.buf.WriteRawByte(0xD2)
+	c.buf.WriteU32(idx)
 }
 
 // i32.trunc_sat_f32_s ( f32 -- i32 )
-func (a *CodeAssembler) I32_TruncSatF32S() {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x00)
+func (c *Code) I32_TruncSatF32S() {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x00)
 }
 
 // i32.trunc_sat_f32_u ( f32 -- i32 )
-func (a *CodeAssembler) I32_TruncSatF32U() {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x01)
+func (c *Code) I32_TruncSatF32U() {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32.trunc_sat_f64_s ( f64 -- i32 )
-func (a *CodeAssembler) I32_TruncSatF64S() {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x02)
+func (c *Code) I32_TruncSatF64S() {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x02)
 }
 
 // i32.trunc_sat_f64_u ( f64 -- i32 )
-func (a *CodeAssembler) I32_TruncSatF64U() {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x03)
+func (c *Code) I32_TruncSatF64U() {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x03)
 }
 
 // i64.trunc_sat_f32_s ( f32 -- i64 )
-func (a *CodeAssembler) I64_TruncSatF32S() {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x04)
+func (c *Code) I64_TruncSatF32S() {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x04)
 }
 
 // i64.trunc_sat_f32_u ( f32 -- i64 )
-func (a *CodeAssembler) I64_TruncSatF32U() {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x05)
+func (c *Code) I64_TruncSatF32U() {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x05)
 }
 
 // i64.trunc_sat_f64_s ( f64 -- i64 )
-func (a *CodeAssembler) I64_TruncSatF64S() {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x06)
+func (c *Code) I64_TruncSatF64S() {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x06)
 }
 
 // i64.trunc_sat_f64_u ( f64 -- i64 )
-func (a *CodeAssembler) I64_TruncSatF64U() {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x07)
+func (c *Code) I64_TruncSatF64U() {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x07)
 }
 
 // memoryinit x ( i32 i32 i32 -- )
-func (a *CodeAssembler) Memoryinit(idx uint32) {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x08)
-	a.WriteIndex(idx)
+func (c *Code) Memoryinit(idx U32) {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x08)
+	c.buf.WriteU32(idx)
 }
 
-// datadrop x
-func (a *CodeAssembler) Datadrop(idx uint32) {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x09)
-	a.WriteIndex(idx)
+// datadrop x ( -- )
+func (c *Code) Datadrop(idx U32) {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x09)
+	c.buf.WriteU32(idx)
 }
 
 // memorycopy ( i32 i32 i32 -- )
-func (a *CodeAssembler) Memorycopy() {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x0A)
+func (c *Code) Memorycopy() {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x0A)
 }
 
 // memoryfill ( i32 i32 i32 -- )
-func (a *CodeAssembler) Memoryfill() {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x0B)
+func (c *Code) Memoryfill() {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x0B)
 }
 
 // tableinit x y ( i32 i32 i32 -- )
-func (a *CodeAssembler) Tableinit(arg1 x y) {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x0C)
-	// Unsupported immediate type: x y
+func (c *Code) Tableinit(idx U32, idx2 U32) {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x0C)
+	c.buf.WriteU32(idx)
+	c.buf.WriteU32(idx2)
 }
 
-// elemdrop x
-func (a *CodeAssembler) Elemdrop(idx uint32) {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x0D)
-	a.WriteIndex(idx)
+// elemdrop x ( -- )
+func (c *Code) Elemdrop(idx U32) {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x0D)
+	c.buf.WriteU32(idx)
 }
 
 // tablecopy x y ( i32 i32 i32 -- )
-func (a *CodeAssembler) Tablecopy(arg1 x y) {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x0E)
-	// Unsupported immediate type: x y
+func (c *Code) Tablecopy(idx U32, idx2 U32) {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x0E)
+	c.buf.WriteU32(idx)
+	c.buf.WriteU32(idx2)
 }
 
 // tablegrow x ( t i32 -- i32 )
-func (a *CodeAssembler) Tablegrow(idx uint32) {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x0F)
-	a.WriteIndex(idx)
+func (c *Code) Tablegrow(idx U32) {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x0F)
+	c.buf.WriteU32(idx)
 }
 
 // tablesize x ( -- i32 )
-func (a *CodeAssembler) Tablesize(idx uint32) {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x10)
-	a.WriteIndex(idx)
+func (c *Code) Tablesize(idx U32) {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x10)
+	c.buf.WriteU32(idx)
 }
 
 // tablefill x ( i32 t i32 -- )
-func (a *CodeAssembler) Tablefill(idx uint32) {
-	a.WriteByte(0xFC)
-	a.WriteByte(0x11)
-	a.WriteIndex(idx)
+func (c *Code) Tablefill(idx U32) {
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x11)
+	c.buf.WriteU32(idx)
 }
 
 // v128.load memarg ( i32 -- v128 )
-func (a *CodeAssembler) V128_Load(align, offset uint32) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x00)
-	a.MemArg(align, offset)
+func (c *Code) V128_Load(mem MemArg) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x00)
+	c.buf.WriteMemArg(mem)
 }
 
 // v128.load8x8_s memarg ( i32 -- v128 )
-func (a *CodeAssembler) V128_Load8x8S(align, offset uint32) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x01)
-	a.MemArg(align, offset)
+func (c *Code) V128_Load8x8S(mem MemArg) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x01)
+	c.buf.WriteMemArg(mem)
 }
 
 // v128.load8x8_u memarg ( i32 -- v128 )
-func (a *CodeAssembler) V128_Load8x8U(align, offset uint32) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x02)
-	a.MemArg(align, offset)
+func (c *Code) V128_Load8x8U(mem MemArg) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x02)
+	c.buf.WriteMemArg(mem)
 }
 
 // v128.load16x4_s memarg ( i32 -- v128 )
-func (a *CodeAssembler) V128_Load16x4S(align, offset uint32) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x03)
-	a.MemArg(align, offset)
+func (c *Code) V128_Load16x4S(mem MemArg) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x03)
+	c.buf.WriteMemArg(mem)
 }
 
 // v128.load16x4_u memarg ( i32 -- v128 )
-func (a *CodeAssembler) V128_Load16x4U(align, offset uint32) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x04)
-	a.MemArg(align, offset)
+func (c *Code) V128_Load16x4U(mem MemArg) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x04)
+	c.buf.WriteMemArg(mem)
 }
 
 // v128.load32x2_s memarg ( i32 -- v128 )
-func (a *CodeAssembler) V128_Load32x2S(align, offset uint32) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x05)
-	a.MemArg(align, offset)
+func (c *Code) V128_Load32x2S(mem MemArg) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x05)
+	c.buf.WriteMemArg(mem)
 }
 
 // v128.load32x2_u memarg ( i32 -- v128 )
-func (a *CodeAssembler) V128_Load32x2U(align, offset uint32) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x06)
-	a.MemArg(align, offset)
+func (c *Code) V128_Load32x2U(mem MemArg) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x06)
+	c.buf.WriteMemArg(mem)
 }
 
 // v128.load8_splat memarg ( i32 -- v128 )
-func (a *CodeAssembler) V128_Load8Splat(align, offset uint32) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x07)
-	a.MemArg(align, offset)
+func (c *Code) V128_Load8Splat(mem MemArg) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x07)
+	c.buf.WriteMemArg(mem)
 }
 
 // v128.load16_splat memarg ( i32 -- v128 )
-func (a *CodeAssembler) V128_Load16Splat(align, offset uint32) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x08)
-	a.MemArg(align, offset)
+func (c *Code) V128_Load16Splat(mem MemArg) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x08)
+	c.buf.WriteMemArg(mem)
 }
 
 // v128.load32_splat memarg ( i32 -- v128 )
-func (a *CodeAssembler) V128_Load32Splat(align, offset uint32) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x09)
-	a.MemArg(align, offset)
+func (c *Code) V128_Load32Splat(mem MemArg) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x09)
+	c.buf.WriteMemArg(mem)
 }
 
 // v128.load64_splat memarg ( i32 -- v128 )
-func (a *CodeAssembler) V128_Load64Splat(align, offset uint32) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x0A)
-	a.MemArg(align, offset)
+func (c *Code) V128_Load64Splat(mem MemArg) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x0A)
+	c.buf.WriteMemArg(mem)
 }
 
 // v128.store memarg ( i32 v128 -- )
-func (a *CodeAssembler) V128_Store(align, offset uint32) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x0B)
-	a.MemArg(align, offset)
+func (c *Code) V128_Store(mem MemArg) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x0B)
+	c.buf.WriteMemArg(mem)
 }
 
 // v128.vconst i128 ( -- v128 )
-func (a *CodeAssembler) V128_Vconst(val [16]byte) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x0C)
-	a.WriteI128(val)
+func (c *Code) V128_Vconst(val I128) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x0C)
+	c.buf.WriteI128(val)
 }
 
 // i8x16.shuffle laneidx{16} ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_Shuffle(lanes [16]uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x0D)
-	for _, l := range lanes {
-		a.WriteByte(byte(l))
-	}
+func (c *Code) I8x16_Shuffle(lanes LaneShuffle) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x0D)
+	c.buf.WriteLaneShuffle(lanes)
 }
 
 // i8x16.swizzle ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_Swizzle() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x0E)
+func (c *Code) I8x16_Swizzle() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x0E)
 }
 
 // i8x16.splat ( i32 -- v128 )
-func (a *CodeAssembler) I8x16_Splat() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x0F)
+func (c *Code) I8x16_Splat() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x0F)
 }
 
 // i16x8.splat ( i32 -- v128 )
-func (a *CodeAssembler) I16x8_Splat() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x10)
+func (c *Code) I16x8_Splat() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x10)
 }
 
 // i32x4.splat ( i32 -- v128 )
-func (a *CodeAssembler) I32x4_Splat() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x11)
+func (c *Code) I32x4_Splat() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x11)
 }
 
 // i64x2.splat ( i64 -- v128 )
-func (a *CodeAssembler) I64x2_Splat() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x12)
+func (c *Code) I64x2_Splat() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x12)
 }
 
 // f32x4.splat ( f32 -- v128 )
-func (a *CodeAssembler) F32x4_Splat() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x13)
+func (c *Code) F32x4_Splat() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x13)
 }
 
 // f64x2.splat ( f64 -- v128 )
-func (a *CodeAssembler) F64x2_Splat() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x14)
+func (c *Code) F64x2_Splat() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x14)
 }
 
 // i8x16.extractlane_s laneidx ( v128 -- i32 )
-func (a *CodeAssembler) I8x16_ExtractlaneS(lane uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x15)
-	a.WriteByte(byte(lane))
+func (c *Code) I8x16_ExtractlaneS(lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x15)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // i8x16.extractlane_u laneidx ( v128 -- i32 )
-func (a *CodeAssembler) I8x16_ExtractlaneU(lane uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x16)
-	a.WriteByte(byte(lane))
+func (c *Code) I8x16_ExtractlaneU(lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x16)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // i8x16.replacelane laneidx ( v128 i32 -- v128 )
-func (a *CodeAssembler) I8x16_Replacelane(lane uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x17)
-	a.WriteByte(byte(lane))
+func (c *Code) I8x16_Replacelane(lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x17)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // i16x8.extractlane_s laneidx ( v128 -- i32 )
-func (a *CodeAssembler) I16x8_ExtractlaneS(lane uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x18)
-	a.WriteByte(byte(lane))
+func (c *Code) I16x8_ExtractlaneS(lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x18)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // i16x8.extractlane_u laneidx ( v128 -- i32 )
-func (a *CodeAssembler) I16x8_ExtractlaneU(lane uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x19)
-	a.WriteByte(byte(lane))
+func (c *Code) I16x8_ExtractlaneU(lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x19)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // i16x8.replacelane laneidx ( v128 i32 -- v128 )
-func (a *CodeAssembler) I16x8_Replacelane(lane uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x1A)
-	a.WriteByte(byte(lane))
+func (c *Code) I16x8_Replacelane(lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x1A)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // i32x4.extractlane laneidx ( v128 -- i32 )
-func (a *CodeAssembler) I32x4_Extractlane(lane uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x1B)
-	a.WriteByte(byte(lane))
+func (c *Code) I32x4_Extractlane(lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x1B)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // i32x4.replacelane laneidx ( v128 i32 -- v128 )
-func (a *CodeAssembler) I32x4_Replacelane(lane uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x1C)
-	a.WriteByte(byte(lane))
+func (c *Code) I32x4_Replacelane(lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x1C)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // i64x2.extractlane laneidx ( v128 -- i64 )
-func (a *CodeAssembler) I64x2_Extractlane(lane uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x1D)
-	a.WriteByte(byte(lane))
+func (c *Code) I64x2_Extractlane(lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x1D)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // i64x2.replacelane laneidx ( v128 i64 -- v128 )
-func (a *CodeAssembler) I64x2_Replacelane(lane uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x1E)
-	a.WriteByte(byte(lane))
+func (c *Code) I64x2_Replacelane(lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x1E)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // f32x4.extractlane laneidx ( v128 -- f32 )
-func (a *CodeAssembler) F32x4_Extractlane(lane uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x1F)
-	a.WriteByte(byte(lane))
+func (c *Code) F32x4_Extractlane(lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x1F)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // f32x4.replacelane laneidx ( v128 f32 -- v128 )
-func (a *CodeAssembler) F32x4_Replacelane(lane uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x20)
-	a.WriteByte(byte(lane))
+func (c *Code) F32x4_Replacelane(lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x20)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // f64x2.extractlane laneidx ( v128 -- f64 )
-func (a *CodeAssembler) F64x2_Extractlane(lane uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x21)
-	a.WriteByte(byte(lane))
+func (c *Code) F64x2_Extractlane(lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x21)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // f64x2.replacelane laneidx ( v128 f64 -- v128 )
-func (a *CodeAssembler) F64x2_Replacelane(lane uint8) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x22)
-	a.WriteByte(byte(lane))
+func (c *Code) F64x2_Replacelane(lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x22)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // i8x16.veq ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_Veq() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x23)
+func (c *Code) I8x16_Veq() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x23)
 }
 
 // i8x16.vne ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_Vne() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x24)
+func (c *Code) I8x16_Vne() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x24)
 }
 
 // i8x16.vlt_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VltS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x25)
+func (c *Code) I8x16_VltS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x25)
 }
 
 // i8x16.vlt_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VltU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x26)
+func (c *Code) I8x16_VltU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x26)
 }
 
 // i8x16.vgt_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VgtS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x27)
+func (c *Code) I8x16_VgtS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x27)
 }
 
 // i8x16.vgt_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VgtU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x28)
+func (c *Code) I8x16_VgtU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x28)
 }
 
 // i8x16.vle_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VleS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x29)
+func (c *Code) I8x16_VleS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x29)
 }
 
 // i8x16.vle_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VleU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x2A)
+func (c *Code) I8x16_VleU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x2A)
 }
 
 // i8x16.vge_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VgeS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x2B)
+func (c *Code) I8x16_VgeS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x2B)
 }
 
 // i8x16.vge_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VgeU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x2C)
+func (c *Code) I8x16_VgeU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x2C)
 }
 
 // i16x8.veq ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_Veq() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x2D)
+func (c *Code) I16x8_Veq() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x2D)
 }
 
 // i16x8.vne ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_Vne() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x2E)
+func (c *Code) I16x8_Vne() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x2E)
 }
 
 // i16x8.vlt_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VltS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x2F)
+func (c *Code) I16x8_VltS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x2F)
 }
 
 // i16x8.vlt_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VltU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x30)
+func (c *Code) I16x8_VltU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x30)
 }
 
 // i16x8.vgt_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VgtS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x31)
+func (c *Code) I16x8_VgtS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x31)
 }
 
 // i16x8.vgt_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VgtU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x32)
+func (c *Code) I16x8_VgtU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x32)
 }
 
 // i16x8.vle_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VleS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x33)
+func (c *Code) I16x8_VleS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x33)
 }
 
 // i16x8.vle_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VleU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x34)
+func (c *Code) I16x8_VleU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x34)
 }
 
 // i16x8.vge_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VgeS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x35)
+func (c *Code) I16x8_VgeS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x35)
 }
 
 // i16x8.vge_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VgeU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x36)
+func (c *Code) I16x8_VgeU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x36)
 }
 
 // i32x4.veq ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_Veq() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x37)
+func (c *Code) I32x4_Veq() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x37)
 }
 
 // i32x4.vne ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_Vne() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x38)
+func (c *Code) I32x4_Vne() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x38)
 }
 
 // i32x4.vlt_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_VltS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x39)
+func (c *Code) I32x4_VltS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x39)
 }
 
 // i32x4.vlt_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_VltU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x3A)
+func (c *Code) I32x4_VltU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x3A)
 }
 
 // i32x4.vgt_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_VgtS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x3B)
+func (c *Code) I32x4_VgtS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x3B)
 }
 
 // i32x4.vgt_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_VgtU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x3C)
+func (c *Code) I32x4_VgtU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x3C)
 }
 
 // i32x4.vle_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_VleS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x3D)
+func (c *Code) I32x4_VleS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x3D)
 }
 
 // i32x4.vle_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_VleU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x3E)
+func (c *Code) I32x4_VleU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x3E)
 }
 
 // i32x4.vge_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_VgeS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x3F)
+func (c *Code) I32x4_VgeS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x3F)
 }
 
 // i32x4.vge_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_VgeU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x40)
+func (c *Code) I32x4_VgeU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x40)
 }
 
 // f32x4.veq ( v128 v128 -- v128 )
-func (a *CodeAssembler) F32x4_Veq() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x41)
+func (c *Code) F32x4_Veq() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x41)
 }
 
 // f32x4.vne ( v128 v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vne() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x42)
+func (c *Code) F32x4_Vne() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x42)
 }
 
 // f32x4.vlt ( v128 v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vlt() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x43)
+func (c *Code) F32x4_Vlt() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x43)
 }
 
 // f32x4.vgt ( v128 v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vgt() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x44)
+func (c *Code) F32x4_Vgt() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x44)
 }
 
 // f32x4.vle ( v128 v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vle() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x45)
+func (c *Code) F32x4_Vle() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x45)
 }
 
 // f32x4.vge ( v128 v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vge() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x46)
+func (c *Code) F32x4_Vge() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x46)
 }
 
 // f64x2.veq ( v128 v128 -- v128 )
-func (a *CodeAssembler) F64x2_Veq() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x47)
+func (c *Code) F64x2_Veq() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x47)
 }
 
 // f64x2.vne ( v128 v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vne() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x48)
+func (c *Code) F64x2_Vne() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x48)
 }
 
 // f64x2.vlt ( v128 v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vlt() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x49)
+func (c *Code) F64x2_Vlt() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x49)
 }
 
 // f64x2.vgt ( v128 v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vgt() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x4A)
+func (c *Code) F64x2_Vgt() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x4A)
 }
 
 // f64x2.vle ( v128 v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vle() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x4B)
+func (c *Code) F64x2_Vle() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x4B)
 }
 
 // f64x2.vge ( v128 v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vge() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x4C)
+func (c *Code) F64x2_Vge() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x4C)
 }
 
 // v128.vnot ( v128 -- v128 )
-func (a *CodeAssembler) V128_Vnot() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x4D)
+func (c *Code) V128_Vnot() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x4D)
 }
 
 // v128.vand ( v128 v128 -- v128 )
-func (a *CodeAssembler) V128_Vand() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x4E)
+func (c *Code) V128_Vand() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x4E)
 }
 
 // v128.vandnot ( v128 v128 -- v128 )
-func (a *CodeAssembler) V128_Vandnot() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x4F)
+func (c *Code) V128_Vandnot() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x4F)
 }
 
 // v128.vor ( v128 v128 -- v128 )
-func (a *CodeAssembler) V128_Vor() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x50)
+func (c *Code) V128_Vor() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x50)
 }
 
 // v128.vxor ( v128 v128 -- v128 )
-func (a *CodeAssembler) V128_Vxor() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x51)
+func (c *Code) V128_Vxor() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x51)
 }
 
 // v128.bitselect ( v128 v128 v128 -- v128 )
-func (a *CodeAssembler) V128_Bitselect() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x52)
+func (c *Code) V128_Bitselect() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x52)
 }
 
 // v128.anytrue ( v128 -- i32 )
-func (a *CodeAssembler) V128_Anytrue() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x53)
+func (c *Code) V128_Anytrue() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x53)
 }
 
 // v128.load8_lane memarg laneidx ( i32 v128 -- v128 )
-func (a *CodeAssembler) V128_Load8Lane(arg1 memarg laneidx) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x54)
-	// Unsupported immediate type: memarg laneidx
+func (c *Code) V128_Load8Lane(mem MemArg, lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x54)
+	c.buf.WriteMemArg(mem)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // v128.load16_lane memarg laneidx ( i32 v128 -- v128 )
-func (a *CodeAssembler) V128_Load16Lane(arg1 memarg laneidx) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x55)
-	// Unsupported immediate type: memarg laneidx
+func (c *Code) V128_Load16Lane(mem MemArg, lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x55)
+	c.buf.WriteMemArg(mem)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // v128.load32_lane memarg laneidx ( i32 v128 -- v128 )
-func (a *CodeAssembler) V128_Load32Lane(arg1 memarg laneidx) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x56)
-	// Unsupported immediate type: memarg laneidx
+func (c *Code) V128_Load32Lane(mem MemArg, lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x56)
+	c.buf.WriteMemArg(mem)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // v128.load64_lane memarg laneidx ( i32 v128 -- v128 )
-func (a *CodeAssembler) V128_Load64Lane(arg1 memarg laneidx) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x57)
-	// Unsupported immediate type: memarg laneidx
+func (c *Code) V128_Load64Lane(mem MemArg, lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x57)
+	c.buf.WriteMemArg(mem)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // v128.store8_lane memarg laneidx ( i32 v128 -- )
-func (a *CodeAssembler) V128_Store8Lane(arg1 memarg laneidx) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x58)
-	// Unsupported immediate type: memarg laneidx
+func (c *Code) V128_Store8Lane(mem MemArg, lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x58)
+	c.buf.WriteMemArg(mem)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // v128.store16_lane memarg laneidx ( i32 v128 -- )
-func (a *CodeAssembler) V128_Store16Lane(arg1 memarg laneidx) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x59)
-	// Unsupported immediate type: memarg laneidx
+func (c *Code) V128_Store16Lane(mem MemArg, lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x59)
+	c.buf.WriteMemArg(mem)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // v128.store32_lane memarg laneidx ( i32 v128 -- )
-func (a *CodeAssembler) V128_Store32Lane(arg1 memarg laneidx) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x5A)
-	// Unsupported immediate type: memarg laneidx
+func (c *Code) V128_Store32Lane(mem MemArg, lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x5A)
+	c.buf.WriteMemArg(mem)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // v128.store64_lane memarg laneidx ( i32 v128 -- )
-func (a *CodeAssembler) V128_Store64Lane(arg1 memarg laneidx) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x5B)
-	// Unsupported immediate type: memarg laneidx
+func (c *Code) V128_Store64Lane(mem MemArg, lane LaneIdx) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x5B)
+	c.buf.WriteMemArg(mem)
+	c.buf.WriteLaneIdx(lane)
 }
 
 // v128.load32_zero memarg ( i32 -- v128 )
-func (a *CodeAssembler) V128_Load32Zero(align, offset uint32) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x5C)
-	a.MemArg(align, offset)
+func (c *Code) V128_Load32Zero(mem MemArg) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x5C)
+	c.buf.WriteMemArg(mem)
 }
 
 // v128.load64_zero memarg ( i32 -- v128 )
-func (a *CodeAssembler) V128_Load64Zero(align, offset uint32) {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x5D)
-	a.MemArg(align, offset)
+func (c *Code) V128_Load64Zero(mem MemArg) {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x5D)
+	c.buf.WriteMemArg(mem)
 }
 
 // f32x4.vdemote_f64x2_zero ( v128 -- v128 )
-func (a *CodeAssembler) F32x4_VdemoteF64x2Zero() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x5E)
+func (c *Code) F32x4_VdemoteF64x2Zero() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x5E)
 }
 
 // f64x2.vpromote_low_f32x4 ( v128 -- v128 )
-func (a *CodeAssembler) F64x2_VpromoteLowF32x4() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x5F)
+func (c *Code) F64x2_VpromoteLowF32x4() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x5F)
 }
 
 // i8x16.vabs ( v128 -- v128 )
-func (a *CodeAssembler) I8x16_Vabs() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x60)
+func (c *Code) I8x16_Vabs() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x60)
 }
 
 // i8x16.vneg ( v128 -- v128 )
-func (a *CodeAssembler) I8x16_Vneg() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x61)
+func (c *Code) I8x16_Vneg() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x61)
 }
 
 // i8x16.vpopcnt ( v128 -- v128 )
-func (a *CodeAssembler) I8x16_Vpopcnt() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x62)
+func (c *Code) I8x16_Vpopcnt() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x62)
 }
 
 // i8x16.alltrue ( v128 -- i32 )
-func (a *CodeAssembler) I8x16_Alltrue() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x63)
+func (c *Code) I8x16_Alltrue() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x63)
 }
 
 // i8x16.bitmask ( v128 -- i32 )
-func (a *CodeAssembler) I8x16_Bitmask() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x64)
+func (c *Code) I8x16_Bitmask() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x64)
 }
 
 // i8x16.narrow_i16x8_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_NarrowI16x8S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x65)
+func (c *Code) I8x16_NarrowI16x8S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x65)
 }
 
 // i8x16.narrow_i16x8_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_NarrowI16x8U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x66)
+func (c *Code) I8x16_NarrowI16x8U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x66)
 }
 
 // f32x4.vceil ( v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vceil() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x67)
+func (c *Code) F32x4_Vceil() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x67)
 }
 
 // f32x4.vfloor ( v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vfloor() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x68)
+func (c *Code) F32x4_Vfloor() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x68)
 }
 
 // f32x4.vtrunc ( v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vtrunc() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x69)
+func (c *Code) F32x4_Vtrunc() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x69)
 }
 
 // f32x4.vnearest ( v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vnearest() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x6A)
+func (c *Code) F32x4_Vnearest() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x6A)
 }
 
 // i8x16.vshl ( v128 i32 -- v128 )
-func (a *CodeAssembler) I8x16_Vshl() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x6B)
+func (c *Code) I8x16_Vshl() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x6B)
 }
 
 // i8x16.vshr_s ( v128 i32 -- v128 )
-func (a *CodeAssembler) I8x16_VshrS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x6C)
+func (c *Code) I8x16_VshrS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x6C)
 }
 
 // i8x16.vshr_u ( v128 i32 -- v128 )
-func (a *CodeAssembler) I8x16_VshrU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x6D)
+func (c *Code) I8x16_VshrU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x6D)
 }
 
 // i8x16.vadd ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_Vadd() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x6E)
+func (c *Code) I8x16_Vadd() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x6E)
 }
 
 // i8x16.vadd_sat_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VaddSatS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x6F)
+func (c *Code) I8x16_VaddSatS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x6F)
 }
 
 // i8x16.vadd_sat_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VaddSatU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x70)
+func (c *Code) I8x16_VaddSatU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x70)
 }
 
 // i8x16.vsub ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_Vsub() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x71)
+func (c *Code) I8x16_Vsub() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x71)
 }
 
 // i8x16.vsub_sat_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VsubSatS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x72)
+func (c *Code) I8x16_VsubSatS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x72)
 }
 
 // i8x16.vsub_sat_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VsubSatU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x73)
+func (c *Code) I8x16_VsubSatU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x73)
 }
 
 // f64x2.vceil ( v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vceil() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x74)
+func (c *Code) F64x2_Vceil() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x74)
 }
 
 // f64x2.vfloor ( v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vfloor() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x75)
+func (c *Code) F64x2_Vfloor() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x75)
 }
 
 // i8x16.vmin_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VminS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x76)
+func (c *Code) I8x16_VminS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x76)
 }
 
 // i8x16.vmin_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VminU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x77)
+func (c *Code) I8x16_VminU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x77)
 }
 
 // i8x16.vmax_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VmaxS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x78)
+func (c *Code) I8x16_VmaxS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x78)
 }
 
 // i8x16.vmax_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_VmaxU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x79)
+func (c *Code) I8x16_VmaxU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x79)
 }
 
 // f64x2.vtrunc ( v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vtrunc() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x7A)
+func (c *Code) F64x2_Vtrunc() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x7A)
 }
 
 // i8x16.avgr_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I8x16_AvgrU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x7B)
+func (c *Code) I8x16_AvgrU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x7B)
 }
 
 // i16x8.extaddpairwise_i8x16_s ( v128 -- v128 )
-func (a *CodeAssembler) I16x8_ExtaddpairwiseI8x16S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x7C)
+func (c *Code) I16x8_ExtaddpairwiseI8x16S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x7C)
 }
 
 // i16x8.extaddpairwise_i8x16_u ( v128 -- v128 )
-func (a *CodeAssembler) I16x8_ExtaddpairwiseI8x16U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x7D)
+func (c *Code) I16x8_ExtaddpairwiseI8x16U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x7D)
 }
 
 // i32x4.extaddpairwise_i16x8_s ( v128 -- v128 )
-func (a *CodeAssembler) I32x4_ExtaddpairwiseI16x8S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x7E)
+func (c *Code) I32x4_ExtaddpairwiseI16x8S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x7E)
 }
 
 // i32x4.extaddpairwise_i16x8_u ( v128 -- v128 )
-func (a *CodeAssembler) I32x4_ExtaddpairwiseI16x8U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x7F)
+func (c *Code) I32x4_ExtaddpairwiseI16x8U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x7F)
 }
 
 // i16x8.vabs ( v128 -- v128 )
-func (a *CodeAssembler) I16x8_Vabs() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x80)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_Vabs() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x80)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vneg ( v128 -- v128 )
-func (a *CodeAssembler) I16x8_Vneg() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x81)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_Vneg() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x81)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.q15mulrsat_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_Q15mulrsatS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x82)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_Q15mulrsatS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x82)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.alltrue ( v128 -- i32 )
-func (a *CodeAssembler) I16x8_Alltrue() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x83)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_Alltrue() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x83)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.bitmask ( v128 -- i32 )
-func (a *CodeAssembler) I16x8_Bitmask() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x84)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_Bitmask() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x84)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.narrow_i32x4_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_NarrowI32x4S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x85)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_NarrowI32x4S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x85)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.narrow_i32x4_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_NarrowI32x4U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x86)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_NarrowI32x4U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x86)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vextend_low_i8x16_s ( v128 -- v128 )
-func (a *CodeAssembler) I16x8_VextendLowI8x16S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x87)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_VextendLowI8x16S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x87)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vextend_high_i8x16_s ( v128 -- v128 )
-func (a *CodeAssembler) I16x8_VextendHighI8x16S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x88)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_VextendHighI8x16S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x88)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vextend_low_i8x16_u ( v128 -- v128 )
-func (a *CodeAssembler) I16x8_VextendLowI8x16U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x89)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_VextendLowI8x16U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x89)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vextend_high_i8x16_u ( v128 -- v128 )
-func (a *CodeAssembler) I16x8_VextendHighI8x16U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x8A)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_VextendHighI8x16U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x8A)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vshl ( v128 i32 -- v128 )
-func (a *CodeAssembler) I16x8_Vshl() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x8B)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_Vshl() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x8B)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vshr_s ( v128 i32 -- v128 )
-func (a *CodeAssembler) I16x8_VshrS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x8C)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_VshrS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x8C)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vshr_u ( v128 i32 -- v128 )
-func (a *CodeAssembler) I16x8_VshrU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x8D)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_VshrU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x8D)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vadd ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_Vadd() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x8E)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_Vadd() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x8E)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vadd_sat_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VaddSatS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x8F)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_VaddSatS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x8F)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vadd_sat_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VaddSatU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x90)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_VaddSatU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x90)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vsub ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_Vsub() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x91)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_Vsub() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x91)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vsub_sat_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VsubSatS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x92)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_VsubSatS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x92)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vsub_sat_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VsubSatU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x93)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_VsubSatU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x93)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f64x2.vnearest ( v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vnearest() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x94)
-	a.WriteByte(0x01)
+func (c *Code) F64x2_Vnearest() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x94)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vmul ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_Vmul() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x95)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_Vmul() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x95)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vmin_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VminS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x96)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_VminS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x96)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vmin_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VminU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x97)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_VminU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x97)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vmax_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VmaxS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x98)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_VmaxS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x98)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.vmax_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_VmaxU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x99)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_VmaxU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x99)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.avgr_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_AvgrU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x9B)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_AvgrU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x9B)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.extmul_low_i8x16_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_ExtmulLowI8x16S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x9C)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_ExtmulLowI8x16S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x9C)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.extmul_high_i8x16_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_ExtmulHighI8x16S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x9D)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_ExtmulHighI8x16S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x9D)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.extmul_low_i8x16_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_ExtmulLowI8x16U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x9E)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_ExtmulLowI8x16U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x9E)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i16x8.extmul_high_i8x16_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I16x8_ExtmulHighI8x16U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0x9F)
-	a.WriteByte(0x01)
+func (c *Code) I16x8_ExtmulHighI8x16U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x9F)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vabs ( v128 -- v128 )
-func (a *CodeAssembler) I32x4_Vabs() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xA0)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_Vabs() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xA0)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vneg ( v128 -- v128 )
-func (a *CodeAssembler) I32x4_Vneg() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xA1)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_Vneg() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xA1)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.alltrue ( v128 -- i32 )
-func (a *CodeAssembler) I32x4_Alltrue() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xA3)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_Alltrue() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xA3)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.bitmask ( v128 -- i32 )
-func (a *CodeAssembler) I32x4_Bitmask() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xA4)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_Bitmask() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xA4)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vextend_low_i16x8_s ( v128 -- v128 )
-func (a *CodeAssembler) I32x4_VextendLowI16x8S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xA7)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_VextendLowI16x8S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xA7)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vextend_high_i16x8_s ( v128 -- v128 )
-func (a *CodeAssembler) I32x4_VextendHighI16x8S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xA8)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_VextendHighI16x8S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xA8)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vextend_low_i16x8_u ( v128 -- v128 )
-func (a *CodeAssembler) I32x4_VextendLowI16x8U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xA9)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_VextendLowI16x8U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xA9)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vextend_high_i16x8_u ( v128 -- v128 )
-func (a *CodeAssembler) I32x4_VextendHighI16x8U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xAA)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_VextendHighI16x8U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xAA)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vshl ( v128 i32 -- v128 )
-func (a *CodeAssembler) I32x4_Vshl() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xAB)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_Vshl() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xAB)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vshr_s ( v128 i32 -- v128 )
-func (a *CodeAssembler) I32x4_VshrS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xAC)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_VshrS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xAC)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vshr_u ( v128 i32 -- v128 )
-func (a *CodeAssembler) I32x4_VshrU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xAD)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_VshrU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xAD)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vadd ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_Vadd() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xAE)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_Vadd() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xAE)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vsub ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_Vsub() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xB1)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_Vsub() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xB1)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vmul ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_Vmul() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xB5)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_Vmul() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xB5)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vmin_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_VminS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xB6)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_VminS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xB6)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vmin_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_VminU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xB7)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_VminU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xB7)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vmax_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_VmaxS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xB8)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_VmaxS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xB8)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vmax_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_VmaxU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xB9)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_VmaxU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xB9)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.dot_i16x8_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_DotI16x8S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xBA)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_DotI16x8S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xBA)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.extmul_low_i16x8_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_ExtmulLowI16x8S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xBC)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_ExtmulLowI16x8S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xBC)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.extmul_high_i16x8_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_ExtmulHighI16x8S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xBD)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_ExtmulHighI16x8S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xBD)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.extmul_low_i16x8_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_ExtmulLowI16x8U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xBE)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_ExtmulLowI16x8U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xBE)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.extmul_high_i16x8_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I32x4_ExtmulHighI16x8U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xBF)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_ExtmulHighI16x8U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xBF)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vabs ( v128 -- v128 )
-func (a *CodeAssembler) I64x2_Vabs() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xC0)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_Vabs() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xC0)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vneg ( v128 -- v128 )
-func (a *CodeAssembler) I64x2_Vneg() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xC1)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_Vneg() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xC1)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.alltrue ( v128 -- i32 )
-func (a *CodeAssembler) I64x2_Alltrue() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xC3)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_Alltrue() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xC3)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.bitmask ( v128 -- i32 )
-func (a *CodeAssembler) I64x2_Bitmask() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xC4)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_Bitmask() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xC4)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vextend_low_i32x4_s ( v128 -- v128 )
-func (a *CodeAssembler) I64x2_VextendLowI32x4S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xC7)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_VextendLowI32x4S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xC7)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vextend_high_i32x4_s ( v128 -- v128 )
-func (a *CodeAssembler) I64x2_VextendHighI32x4S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xC8)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_VextendHighI32x4S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xC8)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vextend_low_i32x4_u ( v128 -- v128 )
-func (a *CodeAssembler) I64x2_VextendLowI32x4U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xC9)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_VextendLowI32x4U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xC9)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vextend_high_i32x4_u ( v128 -- v128 )
-func (a *CodeAssembler) I64x2_VextendHighI32x4U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xCA)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_VextendHighI32x4U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xCA)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vshl ( v128 i32 -- v128 )
-func (a *CodeAssembler) I64x2_Vshl() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xCB)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_Vshl() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xCB)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vshr_s ( v128 i32 -- v128 )
-func (a *CodeAssembler) I64x2_VshrS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xCC)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_VshrS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xCC)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vshr_u ( v128 i32 -- v128 )
-func (a *CodeAssembler) I64x2_VshrU() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xCD)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_VshrU() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xCD)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vadd ( v128 v128 -- v128 )
-func (a *CodeAssembler) I64x2_Vadd() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xCE)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_Vadd() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xCE)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vsub ( v128 v128 -- v128 )
-func (a *CodeAssembler) I64x2_Vsub() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xD1)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_Vsub() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xD1)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vmul ( v128 v128 -- v128 )
-func (a *CodeAssembler) I64x2_Vmul() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xD5)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_Vmul() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xD5)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.veq ( v128 v128 -- v128 )
-func (a *CodeAssembler) I64x2_Veq() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xD6)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_Veq() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xD6)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vne ( v128 v128 -- v128 )
-func (a *CodeAssembler) I64x2_Vne() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xD7)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_Vne() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xD7)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vlt_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I64x2_VltS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xD8)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_VltS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xD8)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vgt_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I64x2_VgtS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xD9)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_VgtS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xD9)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vle_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I64x2_VleS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xDA)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_VleS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xDA)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.vge_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I64x2_VgeS() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xDB)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_VgeS() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xDB)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.extmul_low_i32x4_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I64x2_ExtmulLowI32x4S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xDC)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_ExtmulLowI32x4S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xDC)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.extmul_high_i32x4_s ( v128 v128 -- v128 )
-func (a *CodeAssembler) I64x2_ExtmulHighI32x4S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xDD)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_ExtmulHighI32x4S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xDD)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.extmul_low_i32x4_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I64x2_ExtmulLowI32x4U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xDE)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_ExtmulLowI32x4U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xDE)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i64x2.extmul_high_i32x4_u ( v128 v128 -- v128 )
-func (a *CodeAssembler) I64x2_ExtmulHighI32x4U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xDF)
-	a.WriteByte(0x01)
+func (c *Code) I64x2_ExtmulHighI32x4U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xDF)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f32x4.vabs ( v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vabs() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xE0)
-	a.WriteByte(0x01)
+func (c *Code) F32x4_Vabs() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xE0)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f32x4.vneg ( v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vneg() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xE1)
-	a.WriteByte(0x01)
+func (c *Code) F32x4_Vneg() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xE1)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f32x4.vsqrt ( v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vsqrt() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xE3)
-	a.WriteByte(0x01)
+func (c *Code) F32x4_Vsqrt() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xE3)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f32x4.vadd ( v128 v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vadd() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xE4)
-	a.WriteByte(0x01)
+func (c *Code) F32x4_Vadd() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xE4)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f32x4.vsub ( v128 v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vsub() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xE5)
-	a.WriteByte(0x01)
+func (c *Code) F32x4_Vsub() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xE5)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f32x4.vmul ( v128 v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vmul() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xE6)
-	a.WriteByte(0x01)
+func (c *Code) F32x4_Vmul() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xE6)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f32x4.vdiv ( v128 v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vdiv() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xE7)
-	a.WriteByte(0x01)
+func (c *Code) F32x4_Vdiv() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xE7)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f32x4.vmin ( v128 v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vmin() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xE8)
-	a.WriteByte(0x01)
+func (c *Code) F32x4_Vmin() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xE8)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f32x4.vmax ( v128 v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vmax() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xE9)
-	a.WriteByte(0x01)
+func (c *Code) F32x4_Vmax() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xE9)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f32x4.vpmin ( v128 v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vpmin() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xEA)
-	a.WriteByte(0x01)
+func (c *Code) F32x4_Vpmin() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xEA)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f32x4.vpmax ( v128 v128 -- v128 )
-func (a *CodeAssembler) F32x4_Vpmax() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xEB)
-	a.WriteByte(0x01)
+func (c *Code) F32x4_Vpmax() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xEB)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f64x2.vabs ( v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vabs() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xEC)
-	a.WriteByte(0x01)
+func (c *Code) F64x2_Vabs() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xEC)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f64x2.vneg ( v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vneg() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xED)
-	a.WriteByte(0x01)
+func (c *Code) F64x2_Vneg() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xED)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f64x2.vsqrt ( v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vsqrt() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xEF)
-	a.WriteByte(0x01)
+func (c *Code) F64x2_Vsqrt() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xEF)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f64x2.vadd ( v128 v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vadd() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xF0)
-	a.WriteByte(0x01)
+func (c *Code) F64x2_Vadd() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xF0)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f64x2.vsub ( v128 v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vsub() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xF1)
-	a.WriteByte(0x01)
+func (c *Code) F64x2_Vsub() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xF1)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f64x2.vmul ( v128 v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vmul() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xF2)
-	a.WriteByte(0x01)
+func (c *Code) F64x2_Vmul() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xF2)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f64x2.vdiv ( v128 v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vdiv() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xF3)
-	a.WriteByte(0x01)
+func (c *Code) F64x2_Vdiv() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xF3)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f64x2.vmin ( v128 v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vmin() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xF4)
-	a.WriteByte(0x01)
+func (c *Code) F64x2_Vmin() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xF4)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f64x2.vmax ( v128 v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vmax() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xF5)
-	a.WriteByte(0x01)
+func (c *Code) F64x2_Vmax() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xF5)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f64x2.vpmin ( v128 v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vpmin() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xF6)
-	a.WriteByte(0x01)
+func (c *Code) F64x2_Vpmin() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xF6)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f64x2.vpmax ( v128 v128 -- v128 )
-func (a *CodeAssembler) F64x2_Vpmax() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xF7)
-	a.WriteByte(0x01)
+func (c *Code) F64x2_Vpmax() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xF7)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.trunc_sat_f32x4_s ( v128 -- v128 )
-func (a *CodeAssembler) I32x4_TruncSatF32x4S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xF8)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_TruncSatF32x4S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xF8)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.trunc_sat_f32x4_u ( v128 -- v128 )
-func (a *CodeAssembler) I32x4_TruncSatF32x4U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xF9)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_TruncSatF32x4U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xF9)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f32x4.vconvert_i32x4_s ( v128 -- v128 )
-func (a *CodeAssembler) F32x4_VconvertI32x4S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xFA)
-	a.WriteByte(0x01)
+func (c *Code) F32x4_VconvertI32x4S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xFA)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f32x4.vconvert_i32x4_u ( v128 -- v128 )
-func (a *CodeAssembler) F32x4_VconvertI32x4U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xFB)
-	a.WriteByte(0x01)
+func (c *Code) F32x4_VconvertI32x4U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xFB)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vtrunc_sat_f64x2_s_zero ( v128 -- v128 )
-func (a *CodeAssembler) I32x4_VtruncSatF64x2SZero() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xFC)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_VtruncSatF64x2SZero() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xFC)
+	c.buf.WriteRawByte(0x01)
 }
 
 // i32x4.vtrunc_sat_f64x2_u_zero ( v128 -- v128 )
-func (a *CodeAssembler) I32x4_VtruncSatF64x2UZero() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xFD)
-	a.WriteByte(0x01)
+func (c *Code) I32x4_VtruncSatF64x2UZero() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f64x2.vconvert_low_i32x4_s ( v128 -- v128 )
-func (a *CodeAssembler) F64x2_VconvertLowI32x4S() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xFE)
-	a.WriteByte(0x01)
+func (c *Code) F64x2_VconvertLowI32x4S() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xFE)
+	c.buf.WriteRawByte(0x01)
 }
 
 // f64x2.vconvert_low_i32x4_u ( v128 -- v128 )
-func (a *CodeAssembler) F64x2_VconvertLowI32x4U() {
-	a.WriteByte(0xFD)
-	a.WriteByte(0xFF)
-	a.WriteByte(0x01)
+func (c *Code) F64x2_VconvertLowI32x4U() {
+	c.buf.WriteRawByte(0xFD)
+	c.buf.WriteRawByte(0xFF)
+	c.buf.WriteRawByte(0x01)
 }
