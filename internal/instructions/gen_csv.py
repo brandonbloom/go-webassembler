@@ -8,11 +8,18 @@ def Instruction(name, opcode, type=None, validation=None, execution=None, operat
 def clean_opcode(opcode):
     # Remove \hex{} wrapper and strip 0x prefix
     opcode = re.sub(r'\\hex\{(0x)?([0-9A-F]+)\}', r'\2', opcode)
-    # Replace ~~ with space in multi-byte opcodes
-    opcode = opcode.replace('~~', ' ')
-    # Replace ~ with space in multi-byte opcodes
-    opcode = opcode.replace('~', ' ')
+    # Replace tildes with a single space.
+    opcode = re.sub(r'~+', ' ', opcode)
     return opcode
+
+def clean_type(ty):
+    ty = re.sub(r'\\([A-Z][A-Z0-9]+)', r'\1', ty)  # Change \I32 to I32
+    ty = ty.replace('^\\ast', '[]')   
+    ty = ty.replace('^\ast', '[]')
+    ty = re.sub(r'~+', ' ', ty)
+    ty = re.sub(r'_([0-9])', r'\1', ty)  # Remove underscores from subscripts like _1, _2
+    ty = re.sub(r'\^', '', ty)      # Remove remaining ^ symbols
+    return ty.lower()
 
 def clean_stack_notation(stack_notation):
     if stack_notation is None:
@@ -21,29 +28,10 @@ def clean_stack_notation(stack_notation):
     # Split the stack notation into input and output parts
     match = re.match(r'\[(.*?)\] \\to \[(.*?)\]', stack_notation)
     if match:
-        input_part = match.group(1)
-        output_part = match.group(2)
-        
-        # Clean LaTeX escape sequences
-        input_part = re.sub(r'\\([A-Z][A-Z0-9]+)', r'\1', input_part)  # Change \I32 to I32
-        input_part = input_part.replace('^\\ast', '[]')   
-        input_part = input_part.replace('^\ast', '[]')
-        input_part = input_part.replace('~', ',')
-        input_part = re.sub(r'_[0-9]', '', input_part)  # Remove subscripts like _1, _2
-        input_part = re.sub(r'\^', '', input_part)      # Remove remaining ^ symbols
-        # Convert types to lowercase
-        input_part = input_part.lower()
-        
-        output_part = re.sub(r'\\([A-Z][A-Z0-9]+)', r'\1', output_part)  # Change \I32 to I32
-        output_part = output_part.replace('^\\ast', '[]')
-        output_part = output_part.replace('^\ast', '[]')
-        output_part = output_part.replace('~', ',')
-        output_part = re.sub(r'_[0-9]', '', output_part)  # Remove subscripts
-        output_part = re.sub(r'\^', '', output_part)      # Remove remaining ^ symbols
-        # Convert types to lowercase
-        output_part = output_part.lower()
-        
+        input_part = clean_type(match.group(1))
+        output_part = clean_type(match.group(2))
         return input_part, output_part
+        
     return "", ""
 
 def clean_instruction_name(name):
@@ -51,14 +39,14 @@ def clean_instruction_name(name):
         return ""
     # Remove LaTeX commands and format nicely
     name = re.sub(r'\\([A-Z][A-Z0-9]*)', r'\1', name)  # Change \NOP to NOP
-    name = name.replace('~', '_')
+    name = name.replace('~', ' ')
     name = re.sub(r'\\X\{([^}]+)\}', r'\1', name)  # Replace \X{bt} with bt
-    name = re.sub(r'X\{([^}]+)\}', r'\1', name)     # Also handle without backslash
+    name = re.sub(r'X\{([^}]+)\}', r'\1', name)    # Also handle without backslash
     name = re.sub(r'\\K\{([^}]+)\}', r'\1', name)   # Replace \K{\_s} with _s
     name = re.sub(r'K\{([^}]+)\}', r'\1', name)     # Also handle without backslash
     # Clean up any remaining escape sequences
     name = name.replace('\\', '')
-    name = name.replace('\_', '_')
+    name = name.replace(r'\_', '_')
     name = re.sub(r'\^ast', '', name)  # Remove ^ast
     name = re.sub(r'\^', '', name)     # Remove any other ^
     # Convert to lowercase
@@ -66,37 +54,18 @@ def clean_instruction_name(name):
 
 def extract_immediates(name):
     """Extract immediates from instruction name."""
-    if '_' not in name:
+    parts = name.split(' ', 1)
+    if len(parts) == 1:
         return ""
-    
-    # Get everything after the first underscore
-    parts = name.split('_', 1)
-    if len(parts) > 1:
-        # For compound immediates, replace some _ with .
-        immediates = parts[1]
-        
-        # Handle sat_f32_s type patterns
-        if 'sat_' in immediates:
-            immediates = immediates.replace('_', '.')
-        
-        # Handle other compound patterns
-        elif 'high_' in immediates or 'low_' in immediates:
-            immediates = immediates.replace('_', '.')
-        
-        # Handle x_y type parameters
-        elif len(immediates.split('_')) == 2 and all(len(p) == 1 for p in immediates.split('_')):
-            immediates = immediates.replace('_', ',')
-            
-        return immediates
-    return ""
+    return parts[1]
 
 def get_base_instruction(name):
     """Get the base instruction name without immediates."""
-    if '_' not in name:
+    if ' ' not in name:
         return name
     
     # Get everything before the first underscore
-    return name.split('_', 1)[0]
+    return name.split(' ', 1)[0]
 
 def generate_csv():
     with open('index.csv', 'w', newline='') as csvfile:
