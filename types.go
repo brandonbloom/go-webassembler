@@ -66,11 +66,11 @@ func (sec *TypeSection) emitContents(buf *Buffer) {
 	buf.WriteRaw(sec.buf.Bytes())
 }
 
-func (sec *TypeSection) AddFunc(rt1, rt2 ResultType) TypeIdx {
+func (sec *TypeSection) AddFunc(parameters, results ResultType) TypeIdx {
 	idx := sec.n
 	sec.n++
 	sec.buf.WriteRawByte(0x60)
-	rt1.emit(&sec.buf)
-	rt2.emit(&sec.buf)
+	parameters.emit(&sec.buf)
+	results.emit(&sec.buf)
 	return TypeIdx(idx)
 }
