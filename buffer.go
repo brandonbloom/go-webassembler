@@ -90,3 +90,44 @@ func writeVec[T interface{ emit(*Buffer) }](buf *Buffer, xs []T) {
 		x.emit(buf)
 	}
 }
+
+func (b *Buffer) WriteTableType(typ TableType) {
+	b.WriteRefType(typ.RefType)
+	b.WriteLimits(typ.Limits)
+}
+
+func (b *Buffer) WriteRefType(typ RefType) {
+	b.WriteRawByte(byte(typ))
+}
+
+func (b *Buffer) WriteLimits(limits Limits) {
+	if limits.IsUnlimited() {
+		b.WriteRawByte(0x00)
+		b.WriteU32(limits.Min)
+	} else {
+		b.WriteRawByte(0x01)
+		b.WriteU32(limits.Min)
+		b.WriteU32(limits.Max)
+	}
+}
+
+func (b *Buffer) WriteMemType(typ MemType) {
+	b.WriteLimits(typ.Limits)
+}
+
+func (b *Buffer) WriteGlobalType(typ GlobalType) {
+	b.WriteValType(typ.Value)
+	b.WriteBool(typ.Mutable)
+}
+
+func (b *Buffer) WriteValType(typ ValType) {
+	b.WriteRawByte(typ)
+}
+
+func (b *Buffer) WriteBool(value bool) {
+	if value {
+		b.WriteRawByte(1)
+	} else {
+		b.WriteRawByte(0)
+	}
+}

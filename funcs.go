@@ -18,9 +18,9 @@ func (sec *FuncSection) emitContents(buf *Buffer) {
 	buf.WriteRaw(sec.buf.Bytes())
 }
 
-func (sec *FuncSection) Add(typ TypeIdx) FuncIdx {
+func (sec *FuncSection) Add(typ TypeIdx, numFuncImports U32) FuncIdx {
 	i := sec.n
 	sec.n++
 	sec.buf.WriteTypeIdx(typ)
-	return FuncIdx(i)
+	return FuncIdx(numFuncImports + i)
 }

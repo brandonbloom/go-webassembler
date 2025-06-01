@@ -42,10 +42,10 @@ func (sec *CodeSection) emitContents(buf *Buffer) {
 	buf.WriteRaw(sec.buf.Bytes())
 }
 
-func (sec *CodeSection) Add(code *Code) FuncIdx {
+func (sec *CodeSection) Add(code *Code) CodeIdx {
 	i := sec.n
 	sec.n++
 	sec.buf.WriteU32(U32(code.buf.Len()))
 	sec.buf.WriteRaw(code.buf.Bytes())
-	return FuncIdx(i)
+	return CodeIdx(i)
 }

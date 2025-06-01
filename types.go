@@ -19,6 +19,9 @@ type LabelIdx U32
 type LocalIdx U32
 type GlobalIdx U32
 
+// Not part of the Webassembly spec.
+type CodeIdx U32
+
 func (idx LaneIdx) emit(buf *Buffer)   { buf.WriteU32(U32(idx)) }
 func (idx TypeIdx) emit(buf *Buffer)   { buf.WriteU32(U32(idx)) }
 func (idx FuncIdx) emit(buf *Buffer)   { buf.WriteU32(U32(idx)) }
@@ -41,6 +44,8 @@ const (
 	TypeExternRef         = 0x6F
 	TypeFunc              = 0x60
 )
+
+type ValType = byte
 
 type ResultType []TypeIdx
 

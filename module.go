@@ -3,23 +3,24 @@ package webassembler
 type Module struct {
 	Sections []Section
 
-	Types TypeSection
-	//Imports  Section
-	Funcs FuncSection
-	//Tables   Section
-	//Memory   Section
-	//Globals  Section
+	Types   TypeSection
+	Imports ImportSection
+	Funcs   FuncSection
+	//Tables   TableSection
+	//Memory   MemorySection
+	//Globals  GlobalSection
 	Exports ExportSection
-	//Starts   Section
-	//Elements Section
+	//Starts   StartSection
+	//Elements ElementSection
 	Code CodeSection
-	//Data     Section
+	//Data     DataSection
 }
 
 func NewModule() *Module {
 	mod := &Module{}
 	mod.Sections = []Section{
 		&mod.Types,
+		&mod.Imports,
 		&mod.Funcs,
 		&mod.Exports,
 		&mod.Code,
@@ -53,14 +54,20 @@ func (mod *Module) emitSections(buf *Buffer) {
 	}
 }
 
+func (mod *Module) ImportFunc(modName, name string, typ TypeIdx) FuncIdx {
+	return mod.Imports.AddFunc(modName, name, typ)
+}
+
 func (mod *Module) ExportFunc(name string, idx FuncIdx) ExportIdx {
 	return mod.Exports.AddFunc(name, idx)
 }
 
 func (mod *Module) AddFunc(typeIdx TypeIdx, code *Code) FuncIdx {
-	funcIdx := mod.Funcs.Add(typeIdx)
+	mod.Imports.Freeze()
+	numImports := mod.Imports.numFuncs
+	funcIdx := mod.Funcs.Add(typeIdx, numImports)
 	codeIdx := mod.Code.Add(code)
-	if funcIdx != codeIdx {
+	if CodeIdx(int(funcIdx)-int(numImports)) != codeIdx {
 		panic("misaligned function signatures and code sections")
 	}
 	return funcIdx
