@@ -80,6 +80,10 @@ func (b *Buffer) WriteGlobalIdx(i GlobalIdx) {
 	b.WriteU32(U32(i))
 }
 
+func (b *Buffer) WriteFuncIdx(i FuncIdx) {
+	b.WriteU32(U32(i))
+}
+
 func writeVec[T interface{ emit(*Buffer) }](buf *Buffer, xs []T) {
 	buf.WriteU32(U32(len(xs)))
 	for _, x := range xs {

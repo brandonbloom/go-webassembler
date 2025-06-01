@@ -176,6 +176,8 @@ func parseParam(i int, imm string) Param {
 		return Param{"x", "LocalIdx"}
 	case "global":
 		return Param{"x", "GlobalIdx"}
+	case "func":
+		return Param{"x", "FuncIdx"}
 	default:
 		return Param{fmt.Sprintf("arg%d", i), fmt.Sprintf("Invalid[%s]", imm)}
 	}

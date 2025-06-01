@@ -10,7 +10,7 @@ br,l,0C,t1[] t[],t2[]
 brif,l,0D,t[] i32,t[]
 brtable,l l,0E,t1[] t[] i32,t2[]
 return,,0F,t1[] t[],t2[]
-call,x,10,t1[],t2[]
+call,func,10,t1[],t2[]
 callindirect,x y,11,t1[] i32,t2[]
 drop,,1A,t,
 select,,1B,t t i32,t

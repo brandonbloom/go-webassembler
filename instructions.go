@@ -66,10 +66,10 @@ func (c *Code) Return() {
 	c.buf.WriteRawByte(0x0F)
 }
 
-// call x ( t1[] -- t2[] )
-func (c *Code) Call(idx U32) {
+// call func ( t1[] -- t2[] )
+func (c *Code) Call(x FuncIdx) {
 	c.buf.WriteRawByte(0x10)
-	c.buf.WriteU32(idx)
+	c.buf.WriteFuncIdx(x)
 }
 
 // callindirect x y ( t1[] i32 -- t2[] )

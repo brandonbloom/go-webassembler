@@ -92,6 +92,8 @@ def generate_csv():
                 immediates = "local"
             elif "global" in name and immediates == "x":
                 immediates = "global"
+            elif "call" in name and immediates == "x":
+                immediates = "func"
             
             writer.writerow([name, immediates, clean_code, input_stack, output_stack])
 
