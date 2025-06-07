@@ -74,8 +74,8 @@ func (mod *Module) AddFunc(typeIdx TypeIdx, code *Code) FuncIdx {
 	return funcIdx
 }
 
-func (mod *Module) AddGlobal(globalType GlobalType, code *Code) GlobalIdx {
+func (mod *Module) AddGlobal(globalType GlobalType, expr *Expr) GlobalIdx {
 	mod.Imports.Freeze()
 	numImports := mod.Imports.numGlobals
-	return mod.Globals.Add(globalType, numImports, code)
+	return mod.Globals.Add(globalType, numImports, expr)
 }

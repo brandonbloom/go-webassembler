@@ -25,7 +25,7 @@ type Param struct {
 
 const instructionTemplate = `
 // {{ .Signature }}
-func (c *Code) {{ .Method }}({{ .ParamList }}) {
+func (c *Expr) {{ .Method }}({{ .ParamList }}) {
 	{{- range .Opcode }}
 	c.buf.WriteRawByte(0x{{ . }})
 	{{- end }}

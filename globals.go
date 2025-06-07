@@ -23,10 +23,10 @@ func (sec *GlobalSection) emitContents(buf *Buffer) {
 	buf.WriteRaw(sec.buf.Bytes())
 }
 
-func (sec *GlobalSection) Add(typ GlobalType, numGlobalImports U32, code *Code) GlobalIdx {
+func (sec *GlobalSection) Add(typ GlobalType, numGlobalImports U32, x *Expr) GlobalIdx {
 	i := sec.n
 	sec.n++
 	sec.buf.WriteGlobalType(typ)
-	sec.buf.WriteRaw(code.buf.Bytes())
+	sec.buf.WriteRaw(x.buf.Bytes())
 	return GlobalIdx(numGlobalImports + i)
 }

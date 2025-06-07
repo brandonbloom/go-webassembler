@@ -1,11 +1,13 @@
 package webassembler
 
+// Code provides an instruction encoder encapsulating local variables with an expression.
 type Code struct {
-	buf Buffer
+	Expr
 }
 
 func NewCode(locals ...LocalType) *Code {
 	c := &Code{}
+	// Abuses the internals of Expr to prefix with locals.
 	writeVec(&c.buf, locals)
 	return c
 }
@@ -19,9 +21,6 @@ func (lt LocalType) emit(buf *Buffer) {
 	buf.WriteU32(lt.N)
 	lt.Type.emit(buf)
 }
-
-// The public interface of the Code object is made up of generated instruction methods.
-//go:generate sh -c "go run internal/cmd/codegen/main.go <internal/instructions/index.csv >instructions.go"
 
 type CodeSection struct {
 	n     U32
