@@ -35,7 +35,7 @@ type MemArg struct {
 }
 
 const (
-	TypeI32       TypeIdx = 0x7F
+	TypeI32       ValType = 0x7F
 	TypeI64               = 0x7E
 	TypeF32               = 0x7D
 	TypeF64               = 0x7C
@@ -45,9 +45,11 @@ const (
 	TypeFunc              = 0x60
 )
 
-type ValType = byte
+type ValType byte
 
-type ResultType []TypeIdx
+func (typ ValType) emit(buf *Buffer) { buf.WriteValType(typ) }
+
+type ResultType []ValType
 
 func (rt ResultType) emit(buf *Buffer) {
 	writeVec(buf, rt)

@@ -121,7 +121,7 @@ func (b *Buffer) WriteGlobalType(typ GlobalType) {
 }
 
 func (b *Buffer) WriteValType(typ ValType) {
-	b.WriteRawByte(typ)
+	b.WriteRawByte(byte(typ))
 }
 
 func (b *Buffer) WriteBool(value bool) {
