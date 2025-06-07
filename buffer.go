@@ -57,7 +57,8 @@ func (b *Buffer) WriteLaneShuffle(lanes LaneShuffle) {
 }
 
 func (b *Buffer) WriteMemArg(mem MemArg) {
-	panic("todo: WriteMemArg")
+	b.WriteU32(mem.Align)
+	b.WriteU32(mem.Offset)
 }
 
 func (b *Buffer) WriteTypeIdx(i TypeIdx) {
