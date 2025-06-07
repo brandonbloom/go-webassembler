@@ -8,7 +8,7 @@ type Module struct {
 	Funcs   FuncSection
 	//Tables   TableSection
 	//Memory   MemorySection
-	//Globals  GlobalSection
+	Globals GlobalSection
 	Exports ExportSection
 	//Starts   StartSection
 	//Elements ElementSection
@@ -22,6 +22,7 @@ func NewModule() *Module {
 		&mod.Types,
 		&mod.Imports,
 		&mod.Funcs,
+		&mod.Globals,
 		&mod.Exports,
 		&mod.Code,
 	}
@@ -71,4 +72,10 @@ func (mod *Module) AddFunc(typeIdx TypeIdx, code *Code) FuncIdx {
 		panic("misaligned function signatures and code sections")
 	}
 	return funcIdx
+}
+
+func (mod *Module) AddGlobal(globalType GlobalType, code *Code) GlobalIdx {
+	mod.Imports.Freeze()
+	numImports := mod.Imports.numGlobals
+	return mod.Globals.Add(globalType, numImports, code)
 }
