@@ -7,7 +7,7 @@ type Module struct {
 	Imports ImportSection
 	Funcs   FuncSection
 	//Tables   TableSection
-	//Memory   MemorySection
+	Memory  MemorySection
 	Globals GlobalSection
 	Exports ExportSection
 	//Starts   StartSection
@@ -22,6 +22,7 @@ func NewModule() *Module {
 		&mod.Types,
 		&mod.Imports,
 		&mod.Funcs,
+		&mod.Memory,
 		&mod.Globals,
 		&mod.Exports,
 		&mod.Code,
@@ -74,8 +75,14 @@ func (mod *Module) AddFunc(typeIdx TypeIdx, code *Code) FuncIdx {
 	return funcIdx
 }
 
-func (mod *Module) AddGlobal(globalType GlobalType, expr *Expr) GlobalIdx {
+func (mod *Module) AddGlobal(typ GlobalType, expr *Expr) GlobalIdx {
 	mod.Imports.Freeze()
 	numImports := mod.Imports.numGlobals
-	return mod.Globals.Add(globalType, numImports, expr)
+	return mod.Globals.Add(typ, numImports, expr)
+}
+
+func (mod *Module) AddMemory(typ MemType) MemIdx {
+	mod.Imports.Freeze()
+	numImports := mod.Imports.numMemories
+	return mod.Memory.Add(typ, numImports)
 }
